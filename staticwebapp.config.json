@@ -3,21 +3,29 @@
     {
       "route": "/admin",
       "rewrite": "/admin.html",
-      "allowedRoles": ["hr"]
+      "allowedRoles": ["authenticated"]
     },
     {
       "route": "/admin.html",
-      "allowedRoles": ["hr"]
+      "allowedRoles": ["authenticated"]
     },
     {
       "route": "/api/reports",
       "methods": ["GET"],
-      "allowedRoles": ["hr"]
+      "allowedRoles": ["authenticated"]
     },
     {
       "route": "/api/reports/*",
       "methods": ["PATCH"],
-      "allowedRoles": ["hr"]
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/users",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/users/*",
+      "allowedRoles": ["authenticated"]
     }
   ],
   "navigationFallback": {

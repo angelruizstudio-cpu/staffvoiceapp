@@ -4,6 +4,7 @@ const {
   sanitizeReport,
   toPublicReport
 } = require("../shared/storage");
+const { getUserAccess } = require("../shared/auth");
 
 const validStatuses = new Set(["new", "reviewing", "closed"]);
 
@@ -15,23 +16,6 @@ function json(status, body) {
     },
     body: JSON.stringify(body)
   };
-}
-
-function getClientPrincipal(req) {
-  const encoded = req.headers["x-ms-client-principal"];
-  if (!encoded) return null;
-
-  try {
-    return JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
-  } catch {
-    return null;
-  }
-}
-
-function isHr(req) {
-  if (process.env.STAFFVOICE_ALLOW_LOCAL_ADMIN === "true") return true;
-  const principal = getClientPrincipal(req);
-  return principal?.userRoles?.includes("hr");
 }
 
 module.exports = async function (context, req) {
@@ -55,8 +39,9 @@ module.exports = async function (context, req) {
       return;
     }
 
-    if (!isHr(req)) {
-      context.res = json(403, { error: "HR access required." });
+    const access = await getUserAccess(req);
+    if (!access.allowed) {
+      context.res = json(403, { error: "Staff Voice access required." });
       return;
     }
 

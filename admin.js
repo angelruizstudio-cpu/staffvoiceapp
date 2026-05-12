@@ -1,15 +1,58 @@
 const reportList = document.querySelector("#reportList");
 const filterButtons = document.querySelectorAll("[data-filter]");
 const refreshReports = document.querySelector("#refreshReports");
+const userForm = document.querySelector("#userForm");
+const userList = document.querySelector("#userList");
+const currentUserPill = document.querySelector("#currentUserPill");
 const toast = document.querySelector("#toast");
 
 let reports = [];
+let users = [];
+let currentUser = null;
 let activeFilter = "all";
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
   window.setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+function renderUsers() {
+  if (!currentUser) {
+    userList.innerHTML = `<div class="empty-state">Loading users...</div>`;
+    return;
+  }
+
+  currentUserPill.textContent = `${currentUser.role}: ${currentUser.email}`;
+  const isOwner = currentUser.role === "owner";
+  userForm.classList.toggle("hidden", !isOwner);
+
+  if (!users.length) {
+    userList.innerHTML = `<div class="empty-state">No authorized users found.</div>`;
+    return;
+  }
+
+  userList.innerHTML = users.map((user) => `
+    <article class="user-card">
+      <div>
+        <h3>${user.name || user.email}</h3>
+        <p>${user.email}</p>
+      </div>
+      <div class="report-meta">
+        <span class="tag">${user.role}</span>
+        <span class="tag ${user.active ? "" : "warn"}">${user.active ? "Active" : "Inactive"}</span>
+      </div>
+      ${isOwner ? `
+        <div class="report-actions">
+          <button type="button" data-user-role="hr" data-email="${user.email}">Make HR</button>
+          <button type="button" data-user-role="owner" data-email="${user.email}">Make owner</button>
+          <button type="button" data-user-active="${user.active ? "false" : "true"}" data-email="${user.email}">
+            ${user.active ? "Deactivate" : "Activate"}
+          </button>
+        </div>
+      ` : ""}
+    </article>
+  `).join("");
 }
 
 function reportSummary(report) {
@@ -77,6 +120,19 @@ async function loadReports() {
   renderReports();
 }
 
+async function loadUsers() {
+  const response = await fetch("/api/users");
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || "Unable to load authorized users.");
+  }
+
+  const body = await response.json();
+  currentUser = body.currentUser;
+  users = body.users || [];
+  renderUsers();
+}
+
 async function updateReport(id, status, hrNotes) {
   const response = await fetch(`/api/reports/${id}`, {
     method: "PATCH",
@@ -119,4 +175,58 @@ refreshReports.addEventListener("click", () => {
   loadReports().catch((error) => showToast(error.message));
 });
 
-loadReports().catch((error) => showToast(error.message));
+userForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(userForm);
+  try {
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: formData.get("email"),
+        name: formData.get("name"),
+        role: formData.get("role")
+      })
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || "Unable to save user.");
+    }
+
+    userForm.reset();
+    await loadUsers();
+    showToast("User saved.");
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
+userList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-email]");
+  if (!button) return;
+
+  const payload = {};
+  if (button.dataset.userRole) payload.role = button.dataset.userRole;
+  if (button.dataset.userActive) payload.active = button.dataset.userActive === "true";
+
+  try {
+    const response = await fetch(`/api/users/${encodeURIComponent(button.dataset.email)}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || "Unable to update user.");
+    }
+
+    await loadUsers();
+    showToast("User updated.");
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
+Promise.all([loadReports(), loadUsers()]).catch((error) => showToast(error.message));

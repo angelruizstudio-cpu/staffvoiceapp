@@ -4,13 +4,15 @@ Progressive Web App for confidential staff concerns.
 
 ## Azure setup
 
-The public form is available without login. The HR dashboard is protected at `/admin` and requires the custom Static Web Apps role `hr`.
+The public form is available without login. The HR dashboard at `/admin` requires Microsoft login, then Staff Voice checks the internal `StaffVoiceUsers` table for app-level access.
 
 Required application settings:
 
 ```text
 STAFFVOICE_STORAGE_CONNECTION_STRING=<Azure Storage account connection string>
 STAFFVOICE_TABLE_NAME=StaffVoiceReports
+STAFFVOICE_USERS_TABLE_NAME=StaffVoiceUsers
+STAFFVOICE_OWNER_EMAIL=<first admin email>
 ```
 
 Create an Azure Storage account, copy its connection string, and add it under:
@@ -19,14 +21,4 @@ Create an Azure Storage account, copy its connection string, and add it under:
 Static Web App > Environment variables
 ```
 
-Then invite the HR reviewers under:
-
-```text
-Static Web App > Role management
-```
-
-Assign them the role:
-
-```text
-hr
-```
+`STAFFVOICE_OWNER_EMAIL` is the first app owner. After that owner logs into `/admin`, they can add and deactivate HR reviewers from the Authorized users section without using Azure role management.

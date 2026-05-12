@@ -1,7 +1,8 @@
 const { randomUUID } = require("crypto");
 const { TableClient, AzureNamedKeyCredential } = require("@azure/data-tables");
 
-const tableName = process.env.STAFFVOICE_TABLE_NAME || "StaffVoiceReports";
+const reportTableName = process.env.STAFFVOICE_TABLE_NAME || "StaffVoiceReports";
+const userTableName = process.env.STAFFVOICE_USERS_TABLE_NAME || "StaffVoiceUsers";
 
 function parseConnectionString(connectionString) {
   return Object.fromEntries(
@@ -15,7 +16,7 @@ function parseConnectionString(connectionString) {
   );
 }
 
-function getTableClient() {
+function getTableClient(tableName = reportTableName) {
   const connectionString = process.env.STAFFVOICE_STORAGE_CONNECTION_STRING;
   if (!connectionString) {
     throw new Error("Missing STAFFVOICE_STORAGE_CONNECTION_STRING application setting.");
@@ -67,6 +68,38 @@ function sanitizeReport(input) {
   };
 }
 
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function sanitizeUser(input) {
+  const email = normalizeEmail(input.email);
+  const now = new Date().toISOString();
+  const role = input.role === "owner" ? "owner" : "hr";
+
+  return {
+    partitionKey: "users",
+    rowKey: email,
+    email,
+    name: String(input.name || email).slice(0, 160),
+    role,
+    active: input.active !== false,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function toPublicUser(entity) {
+  return {
+    email: entity.email,
+    name: entity.name,
+    role: entity.role,
+    active: Boolean(entity.active),
+    createdAt: entity.createdAt,
+    updatedAt: entity.updatedAt
+  };
+}
+
 function toPublicReport(entity) {
   return {
     id: entity.id,
@@ -89,6 +122,11 @@ function toPublicReport(entity) {
 module.exports = {
   ensureTable,
   getTableClient,
+  normalizeEmail,
+  reportTableName,
   sanitizeReport,
-  toPublicReport
+  sanitizeUser,
+  toPublicReport,
+  toPublicUser,
+  userTableName
 };
