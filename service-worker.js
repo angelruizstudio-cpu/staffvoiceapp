@@ -1,4 +1,4 @@
-const CACHE_NAME = "staff-voice-v2";
+const CACHE_NAME = "staff-voice-v3";
 const ASSETS = [
   "./",
   "./index.html",
@@ -25,6 +25,8 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  if (event.request.mode === "navigate") return;
+  if (new URL(event.request.url).pathname.startsWith("/api/")) return;
   event.respondWith(
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
