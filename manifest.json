@@ -1,0 +1,17 @@
+{
+  "name": "Staff Voice",
+  "short_name": "Staff Voice",
+  "description": "A confidential staff concerns PWA prototype.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fbfdfc",
+  "theme_color": "#164b44",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

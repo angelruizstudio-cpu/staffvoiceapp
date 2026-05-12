@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Staff Voice icon</title>
+  <desc id="desc">A shield containing a speech bubble.</desc>
+  <rect width="512" height="512" rx="96" fill="#164b44"/>
+  <path d="M256 76 396 130v104c0 93-55 162-140 202-85-40-140-109-140-202V130l140-54Z" fill="#edf5f2"/>
+  <path d="M170 178c0-25 20-45 45-45h82c25 0 45 20 45 45v58c0 25-20 45-45 45h-53l-57 47v-47h-17c-25 0-45-20-45-45v-58Z" fill="#164b44"/>
+  <circle cx="214" cy="207" r="11" fill="#bb842c"/>
+  <circle cx="256" cy="207" r="11" fill="#bb842c"/>
+  <circle cx="298" cy="207" r="11" fill="#bb842c"/>
+</svg>

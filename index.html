@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#164b44">
+    <title>Staff Voice</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#report" aria-label="Staff Voice home">
+        <img src="icons/icon.svg" alt="">
+        <span>Staff Voice</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="#report">Submit</a>
+        <a href="#process">Process</a>
+        <a href="#hr">HR panel</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="report">
+        <div class="hero-copy">
+          <p class="eyebrow">Anonymous unless you choose follow-up</p>
+          <h1>A safer way for staff concerns to be heard.</h1>
+          <p class="lead">
+            Share an issue, concern, or suggestion with HR. You control whether HR may contact you and whether a de-identified summary may be shared with Staff Council.
+          </p>
+        </div>
+        <div class="trust-strip" aria-label="Privacy summary">
+          <div>
+            <strong>No employee login</strong>
+            <span>Designed for anonymous submission.</span>
+          </div>
+          <div>
+            <strong>Clear consent</strong>
+            <span>You choose follow-up and council sharing.</span>
+          </div>
+          <div>
+            <strong>Visible next steps</strong>
+            <span>The process is stated before you submit.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace" aria-label="Staff report workspace">
+        <aside class="privacy-panel">
+          <h2>Privacy choices</h2>
+          <p>This prototype stores reports only in this browser for demo purposes. A production version would need a secure backend with access controls.</p>
+          <div class="choice-grid" role="group" aria-label="Privacy mode">
+            <button class="choice active" type="button" data-privacy="anonymous">
+              <span class="choice-title">Stay anonymous</span>
+              <span>No contact details are requested.</span>
+            </button>
+            <button class="choice" type="button" data-privacy="followup">
+              <span class="choice-title">Allow follow-up</span>
+              <span>HR can contact you using details you provide.</span>
+            </button>
+          </div>
+          <div class="assurance" id="assurance">
+            Your report remains anonymous because no contact information will be collected.
+          </div>
+        </aside>
+
+        <form class="report-form" id="voiceForm">
+          <div class="form-head">
+            <h2>Submit a confidential report</h2>
+            <span class="step-pill" id="privacyPill">Anonymous</span>
+          </div>
+
+          <label>
+            What would you like to share?
+            <select name="reportType" required>
+              <option value="">Select one</option>
+              <option>Issue</option>
+              <option>Concern</option>
+              <option>Suggestion</option>
+              <option>Question</option>
+              <option>Other</option>
+            </select>
+          </label>
+
+          <label>
+            Who is this about?
+            <select name="reportingFor" id="reportingFor" required>
+              <option value="">Select one</option>
+              <option value="self">I am reporting for myself</option>
+              <option value="other">I am reporting on behalf of someone else</option>
+            </select>
+          </label>
+
+          <label class="conditional hidden" id="permissionField">
+            Do you have their permission to share this?
+            <select name="permission">
+              <option value="">Select one</option>
+              <option>Yes, I have permission</option>
+              <option>No, I do not have permission</option>
+              <option>I am unsure</option>
+            </select>
+          </label>
+
+          <label>
+            Describe what happened or what you want HR to know.
+            <textarea name="description" rows="7" required placeholder="Share only what you are comfortable sharing."></textarea>
+          </label>
+
+          <div class="two-col">
+            <label>
+              Area or process
+              <input name="area" type="text" placeholder="Optional">
+            </label>
+            <label>
+              Urgency
+              <select name="urgency" required>
+                <option>Routine</option>
+                <option>Needs attention soon</option>
+                <option>Urgent</option>
+              </select>
+            </label>
+          </div>
+
+          <fieldset>
+            <legend>May HR share a de-identified summary with Staff Council?</legend>
+            <label class="radio-row">
+              <input type="radio" name="shareCouncil" value="Yes" required>
+              Yes
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="shareCouncil" value="No">
+              No
+            </label>
+          </fieldset>
+
+          <div class="conditional hidden" id="contactFields">
+            <p class="note">By providing contact information, your report is no longer anonymous to HR. It should still be handled confidentially.</p>
+            <label>
+              How should HR contact you?
+              <input name="contact" type="text" placeholder="Email, phone, or preferred method">
+            </label>
+          </div>
+
+          <div class="review-box" id="reviewBox">
+            <strong>Before you submit:</strong>
+            <span id="reviewText">No contact information will be requested. HR receives the report, and Staff Council only receives it if you authorize sharing.</span>
+          </div>
+
+          <button class="submit-button" type="submit">Submit confidential report</button>
+          <p class="small-print">For emergencies or immediate safety concerns, use the appropriate urgent contact instead of this form.</p>
+        </form>
+      </section>
+
+      <section class="process" id="process">
+        <h2>What happens next</h2>
+        <div class="process-grid">
+          <article>
+            <span>1</span>
+            <h3>HR reviews</h3>
+            <p>Submissions are reviewed by HR and categorized for appropriate follow-up.</p>
+          </article>
+          <article>
+            <span>2</span>
+            <h3>Privacy is checked</h3>
+            <p>HR confirms whether the report allows follow-up and whether Staff Council sharing was authorized.</p>
+          </article>
+          <article>
+            <span>3</span>
+            <h3>Action is tracked</h3>
+            <p>HR can mark each report as new, reviewing, closed, or prepared for de-identified sharing.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="hr-section" id="hr">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Private HR demo</p>
+            <h2>Report dashboard</h2>
+          </div>
+          <button class="secondary-button" id="clearReports" type="button">Clear demo data</button>
+        </div>
+        <div class="filters" aria-label="Report filters">
+          <button class="filter active" type="button" data-filter="all">All</button>
+          <button class="filter" type="button" data-filter="new">New</button>
+          <button class="filter" type="button" data-filter="reviewing">Reviewing</button>
+          <button class="filter" type="button" data-filter="closed">Closed</button>
+        </div>
+        <div class="report-list" id="reportList" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
