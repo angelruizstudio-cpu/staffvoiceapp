@@ -1,45 +1,161 @@
 const { randomUUID } = require("crypto");
-const { TableClient, AzureNamedKeyCredential } = require("@azure/data-tables");
+const { createClient } = require("@supabase/supabase-js");
 
-const reportTableName = process.env.STAFFVOICE_TABLE_NAME || "StaffVoiceReports";
-const userTableName = process.env.STAFFVOICE_USERS_TABLE_NAME || "StaffVoiceUsers";
+const reportTableName = process.env.STAFFVOICE_TABLE_NAME || "staffvoice_reports";
+const userTableName = process.env.STAFFVOICE_USERS_TABLE_NAME || "staffvoice_users";
 
-function parseConnectionString(connectionString) {
-  return Object.fromEntries(
-    connectionString
-      .split(";")
-      .filter(Boolean)
-      .map((part) => {
-        const index = part.indexOf("=");
-        return [part.slice(0, index), part.slice(index + 1)];
-      })
-  );
+function getSupabase() {
+  const url = process.env.SUPABASE_URL || process.env.STAFFVOICE_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.STAFFVOICE_SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRoleKey) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY application setting.");
+  }
+
+  return createClient(url, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false
+    }
+  });
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function toReportRow(entity) {
+  return {
+    id: entity.id,
+    created_at: entity.createdAt,
+    updated_at: entity.updatedAt,
+    status: entity.status,
+    report_type: entity.reportType,
+    privacy_mode: entity.privacyMode,
+    reporting_for: entity.reportingFor,
+    permission: entity.permission,
+    description: entity.description,
+    area: entity.area,
+    urgency: entity.urgency,
+    share_council: entity.shareCouncil,
+    contact: entity.contact,
+    hr_notes: entity.hrNotes || ""
+  };
+}
+
+function fromReportRow(row) {
+  return {
+    partitionKey: "reports",
+    rowKey: row.id,
+    id: row.id,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    status: row.status,
+    reportType: row.report_type,
+    privacyMode: row.privacy_mode,
+    reportingFor: row.reporting_for,
+    permission: row.permission,
+    description: row.description,
+    area: row.area,
+    urgency: row.urgency,
+    shareCouncil: row.share_council,
+    contact: row.contact,
+    hrNotes: row.hr_notes || ""
+  };
+}
+
+function toUserRow(entity) {
+  return {
+    email: normalizeEmail(entity.email),
+    name: entity.name,
+    role: entity.role,
+    active: Boolean(entity.active),
+    password_salt: entity.passwordSalt || entity.salt,
+    password_hash: entity.passwordHash,
+    created_at: entity.createdAt,
+    updated_at: entity.updatedAt
+  };
+}
+
+function fromUserRow(row) {
+  return {
+    partitionKey: "users",
+    rowKey: row.email,
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    active: Boolean(row.active),
+    passwordSalt: row.password_salt,
+    passwordHash: row.password_hash,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at
+  };
+}
+
+function mapDbError(error) {
+  if (!error) return null;
+  const mapped = new Error(error.message || "Database error.");
+  mapped.code = error.code;
+  mapped.details = error.details;
+  mapped.hint = error.hint;
+  if (error.code === "PGRST116") mapped.statusCode = 404;
+  return mapped;
 }
 
 function getTableClient(tableName = reportTableName) {
-  const connectionString = process.env.STAFFVOICE_STORAGE_CONNECTION_STRING;
-  if (!connectionString) {
-    throw new Error("Missing STAFFVOICE_STORAGE_CONNECTION_STRING application setting.");
-  }
+  const supabase = getSupabase();
+  const isUsers = tableName === userTableName;
 
-  const parsed = parseConnectionString(connectionString);
-  if (parsed.AccountName && parsed.AccountKey) {
-    const credential = new AzureNamedKeyCredential(parsed.AccountName, parsed.AccountKey);
-    const endpoint = parsed.TableEndpoint || `https://${parsed.AccountName}.table.core.windows.net`;
-    return new TableClient(endpoint, tableName, credential);
-  }
+  return {
+    tableName,
 
-  return TableClient.fromConnectionString(connectionString, tableName);
+    async createTable() {
+      return undefined;
+    },
+
+    async createEntity(entity) {
+      const row = isUsers ? toUserRow(entity) : toReportRow(entity);
+      const { error } = await supabase.from(tableName).insert(row);
+      if (error) throw mapDbError(error);
+    },
+
+    async getEntity(partitionKey, rowKey) {
+      const query = supabase
+        .from(tableName)
+        .select("*")
+        .eq(isUsers ? "email" : "id", rowKey)
+        .single();
+
+      const { data, error } = await query;
+      if (error) throw mapDbError(error);
+      return isUsers ? fromUserRow(data) : fromReportRow(data);
+    },
+
+    async updateEntity(entity) {
+      const row = isUsers ? toUserRow(entity) : toReportRow(entity);
+      const keyColumn = isUsers ? "email" : "id";
+      const keyValue = isUsers ? row.email : row.id;
+      Object.keys(row).forEach((key) => {
+        if (row[key] === undefined) delete row[key];
+      });
+      const { error } = await supabase.from(tableName).update(row).eq(keyColumn, keyValue);
+      if (error) throw mapDbError(error);
+    },
+
+    async *listEntities() {
+      let query = supabase.from(tableName).select("*");
+      query = isUsers ? query.order("email", { ascending: true }) : query.order("created_at", { ascending: false });
+      const { data, error } = await query;
+      if (error) throw mapDbError(error);
+      for (const row of data || []) {
+        yield isUsers ? fromUserRow(row) : fromReportRow(row);
+      }
+    }
+  };
 }
 
 async function ensureTable(client) {
-  try {
-    await client.createTable();
-  } catch (error) {
-    if (error.statusCode !== 409) {
-      throw error;
-    }
-  }
+  await client.createTable();
 }
 
 function sanitizeReport(input) {
@@ -66,10 +182,6 @@ function sanitizeReport(input) {
     contact: privacyMode === "followup" ? String(input.contact || "").slice(0, 240) : "",
     hrNotes: ""
   };
-}
-
-function normalizeEmail(value) {
-  return String(value || "").trim().toLowerCase();
 }
 
 function sanitizeUser(input) {

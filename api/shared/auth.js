@@ -24,7 +24,7 @@ function sign(value) {
 
 function hashPassword(password, salt = randomBytes(16).toString("base64url")) {
   const hash = pbkdf2Sync(String(password), salt, 120000, 32, "sha256").toString("base64url");
-  return { salt, passwordHash: hash };
+  return { passwordSalt: salt, passwordHash: hash };
 }
 
 function verifyPassword(password, salt, expectedHash) {

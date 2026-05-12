@@ -9,14 +9,21 @@ The public form is available without login. The HR dashboard at `/admin` uses St
 Required application settings:
 
 ```text
-STAFFVOICE_STORAGE_CONNECTION_STRING=<Azure Storage account connection string>
-STAFFVOICE_TABLE_NAME=StaffVoiceReports
-STAFFVOICE_USERS_TABLE_NAME=StaffVoiceUsers
+SUPABASE_URL=https://zmhjovnmubegshoznbqv.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=<Supabase service role key>
+STAFFVOICE_TABLE_NAME=staffvoice_reports
+STAFFVOICE_USERS_TABLE_NAME=staffvoice_users
 STAFFVOICE_SESSION_SECRET=<long random secret>
 STAFFVOICE_SETUP_CODE=<one-time setup code>
 ```
 
-Create an Azure Storage account, copy its connection string, and add these settings under:
+Create the Supabase tables by running:
+
+```text
+supabase/schema.sql
+```
+
+Then add these settings under:
 
 ```text
 Static Web App > Environment variables
