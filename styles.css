@@ -94,6 +94,24 @@ nav a:focus-visible {
   color: white;
 }
 
+.admin-hero {
+  padding: clamp(42px, 7vw, 86px) clamp(18px, 5vw, 72px);
+  color: white;
+  background:
+    linear-gradient(110deg, rgba(9, 50, 45, 0.96), rgba(65, 108, 143, 0.74)),
+    url("https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=80");
+  background-position: center;
+  background-size: cover;
+}
+
+.admin-hero h1 {
+  max-width: 780px;
+  margin: 0;
+  font-size: clamp(2.3rem, 6vw, 4.8rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
 .hero-copy {
   align-self: center;
   max-width: 820px;
@@ -216,6 +234,18 @@ p {
   border: 1px solid var(--line);
   border-radius: 8px;
   cursor: pointer;
+}
+
+.submit-button:disabled {
+  cursor: progress;
+  opacity: 0.68;
+}
+
+.link-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
 }
 
 .choice {
@@ -519,6 +549,35 @@ textarea:focus {
 
 .toast.show {
   transform: translateY(0);
+}
+
+.access-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: var(--soft);
+}
+
+.access-panel {
+  width: min(520px, 100%);
+  padding: 34px;
+  text-align: center;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.access-panel img {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 18px;
+}
+
+.access-panel h1 {
+  margin: 0 0 12px;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
 }
 
 @media (max-width: 820px) {

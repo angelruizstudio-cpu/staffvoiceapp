@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#164b44">
+    <title>HR Panel | Staff Voice</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Staff Voice home">
+        <img src="icons/icon.svg" alt="">
+        <span>Staff Voice</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="/">Submit</a>
+        <a href="/.auth/me">Account</a>
+        <a href="/.auth/logout">Sign out</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="admin-hero">
+        <p class="eyebrow">Private HR workspace</p>
+        <h1>Review and respond with care.</h1>
+        <p class="lead">Only reports authorized for follow-up include contact information. Staff Council sharing should use de-identified summaries unless the employee has explicitly allowed otherwise.</p>
+      </section>
+
+      <section class="hr-section" id="hr">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Protected dashboard</p>
+            <h2>Report dashboard</h2>
+          </div>
+          <button class="secondary-button" id="refreshReports" type="button">Refresh</button>
+        </div>
+        <div class="filters" aria-label="Report filters">
+          <button class="filter active" type="button" data-filter="all">All</button>
+          <button class="filter" type="button" data-filter="new">New</button>
+          <button class="filter" type="button" data-filter="reviewing">Reviewing</button>
+          <button class="filter" type="button" data-filter="closed">Closed</button>
+        </div>
+        <div class="report-list" id="reportList" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="admin.js"></script>
+  </body>
+</html>

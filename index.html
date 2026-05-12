@@ -18,7 +18,7 @@
       <nav aria-label="Primary">
         <a href="#report">Submit</a>
         <a href="#process">Process</a>
-        <a href="#hr">HR panel</a>
+        <a href="/admin">HR panel</a>
       </nav>
     </header>
 
@@ -50,7 +50,7 @@
       <section class="workspace" aria-label="Staff report workspace">
         <aside class="privacy-panel">
           <h2>Privacy choices</h2>
-          <p>This prototype stores reports only in this browser for demo purposes. A production version would need a secure backend with access controls.</p>
+          <p>Reports are sent securely to HR. The HR panel is separate from this public form and requires authorized access.</p>
           <div class="choice-grid" role="group" aria-label="Privacy mode">
             <button class="choice active" type="button" data-privacy="anonymous">
               <span class="choice-title">Stay anonymous</span>
@@ -174,22 +174,6 @@
         </div>
       </section>
 
-      <section class="hr-section" id="hr">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Private HR demo</p>
-            <h2>Report dashboard</h2>
-          </div>
-          <button class="secondary-button" id="clearReports" type="button">Clear demo data</button>
-        </div>
-        <div class="filters" aria-label="Report filters">
-          <button class="filter active" type="button" data-filter="all">All</button>
-          <button class="filter" type="button" data-filter="new">New</button>
-          <button class="filter" type="button" data-filter="reviewing">Reviewing</button>
-          <button class="filter" type="button" data-filter="closed">Closed</button>
-        </div>
-        <div class="report-list" id="reportList" aria-live="polite"></div>
-      </section>
     </main>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
