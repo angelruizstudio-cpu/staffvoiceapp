@@ -18,8 +18,7 @@
       <nav aria-label="Primary">
         <a href="/">Submit</a>
         <a href="#users">Users</a>
-        <a href="/.auth/me">Account</a>
-        <a href="/.auth/logout">Sign out</a>
+        <button class="nav-button" id="logoutButton" type="button">Sign out</button>
       </nav>
     </header>
 
@@ -71,6 +70,10 @@
               <option value="hr">HR reviewer</option>
               <option value="owner">Owner</option>
             </select>
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" minlength="10" placeholder="Set or reset">
           </label>
           <button class="secondary-button" type="submit">Add or update user</button>
         </form>

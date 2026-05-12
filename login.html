@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#164b44">
+    <title>Sign in | Staff Voice</title>
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="login-page">
+      <section class="login-panel">
+        <img src="/icons/icon.svg" alt="">
+        <p class="eyebrow">Staff Voice</p>
+        <h1>Sign in</h1>
+        <p class="login-copy">Use your Staff Voice account to review reports and manage authorized users.</p>
+        <form id="loginForm">
+          <label>Email<input name="email" type="email" autocomplete="username" required></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+          <button class="submit-button" type="submit">Sign in</button>
+        </form>
+        <details class="setup-box">
+          <summary>First-time owner setup</summary>
+          <form id="setupForm">
+            <label>Setup code<input name="setupCode" type="password" required></label>
+            <label>Owner email<input name="email" type="email" autocomplete="username" required></label>
+            <label>Name<input name="name" type="text" placeholder="Optional"></label>
+            <label>Password<input name="password" type="password" autocomplete="new-password" minlength="10" required></label>
+            <button class="secondary-button" type="submit">Create owner account</button>
+          </form>
+        </details>
+      </section>
+    </main>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/login.js"></script>
+  </body>
+</html>

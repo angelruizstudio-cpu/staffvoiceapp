@@ -4,6 +4,7 @@ const refreshReports = document.querySelector("#refreshReports");
 const userForm = document.querySelector("#userForm");
 const userList = document.querySelector("#userList");
 const currentUserPill = document.querySelector("#currentUserPill");
+const logoutButton = document.querySelector("#logoutButton");
 const toast = document.querySelector("#toast");
 
 let reports = [];
@@ -110,6 +111,10 @@ function renderReports() {
 async function loadReports() {
   reportList.innerHTML = `<div class="empty-state">Loading reports...</div>`;
   const response = await fetch("/api/reports");
+  if (response.status === 401) {
+    window.location.href = "/login.html";
+    return;
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.error || "Unable to load reports.");
@@ -122,6 +127,10 @@ async function loadReports() {
 
 async function loadUsers() {
   const response = await fetch("/api/users");
+  if (response.status === 401) {
+    window.location.href = "/login.html";
+    return;
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.error || "Unable to load authorized users.");
@@ -175,6 +184,11 @@ refreshReports.addEventListener("click", () => {
   loadReports().catch((error) => showToast(error.message));
 });
 
+logoutButton.addEventListener("click", async () => {
+  await fetch("/api/auth/logout", { method: "POST" });
+  window.location.href = "/login.html";
+});
+
 userForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(userForm);
@@ -185,7 +199,8 @@ userForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({
         email: formData.get("email"),
         name: formData.get("name"),
-        role: formData.get("role")
+        role: formData.get("role"),
+        password: formData.get("password")
       })
     });
 

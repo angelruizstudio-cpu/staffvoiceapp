@@ -6,7 +6,7 @@ const {
   toPublicUser,
   userTableName
 } = require("../shared/storage");
-const { getUserAccess, requireOwner } = require("../shared/auth");
+const { getUserAccess, hashPassword, requireOwner } = require("../shared/auth");
 
 function json(status, body) {
   return {
@@ -48,9 +48,17 @@ module.exports = async function (context, req) {
 
     if (req.method === "POST") {
       const user = sanitizeUser(req.body || {});
+      const password = String(req.body?.password || "");
       if (!user.email || !user.email.includes("@")) {
         context.res = json(400, { error: "A valid email is required." });
         return;
+      }
+      if (password && password.length < 10) {
+        context.res = json(400, { error: "Password must be at least 10 characters." });
+        return;
+      }
+      if (password) {
+        Object.assign(user, hashPassword(password));
       }
 
       try {
@@ -58,6 +66,9 @@ module.exports = async function (context, req) {
         existing.name = user.name;
         existing.role = user.role;
         existing.active = user.active;
+        if (password) {
+          Object.assign(existing, hashPassword(password));
+        }
         existing.updatedAt = new Date().toISOString();
         await client.updateEntity(existing, "Merge");
         context.res = json(200, { user: toPublicUser(existing) });
@@ -80,6 +91,14 @@ module.exports = async function (context, req) {
       if (req.body?.active !== undefined) user.active = Boolean(req.body.active);
       if (req.body?.role === "owner" || req.body?.role === "hr") user.role = req.body.role;
       if (req.body?.name !== undefined) user.name = String(req.body.name || user.email).slice(0, 160);
+      if (req.body?.password) {
+        const password = String(req.body.password);
+        if (password.length < 10) {
+          context.res = json(400, { error: "Password must be at least 10 characters." });
+          return;
+        }
+        Object.assign(user, hashPassword(password));
+      }
       user.updatedAt = new Date().toISOString();
       await client.updateEntity(user, "Merge");
       context.res = json(200, { user: toPublicUser(user) });

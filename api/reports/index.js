@@ -41,7 +41,7 @@ module.exports = async function (context, req) {
 
     const access = await getUserAccess(req);
     if (!access.allowed) {
-      context.res = json(403, { error: "Staff Voice access required." });
+      context.res = json(access.status || 403, { error: "Staff Voice access required." });
       return;
     }
 

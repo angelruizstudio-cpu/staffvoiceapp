@@ -1,95 +1,120 @@
+const { createHmac, pbkdf2Sync, randomBytes, timingSafeEqual } = require("crypto");
 const {
   ensureTable,
   getTableClient,
   normalizeEmail,
+  toPublicUser,
   userTableName
 } = require("./storage");
 
-function getClientPrincipal(req) {
-  const encoded = req.headers["x-ms-client-principal"];
-  if (!encoded) return null;
+const cookieName = "staffvoice_session";
+const sessionHours = Number(process.env.STAFFVOICE_SESSION_HOURS || 8);
+
+function base64url(input) {
+  return Buffer.from(input).toString("base64url");
+}
+
+function sign(value) {
+  const secret = process.env.STAFFVOICE_SESSION_SECRET;
+  if (!secret) {
+    throw new Error("Missing STAFFVOICE_SESSION_SECRET application setting.");
+  }
+  return createHmac("sha256", secret).update(value).digest("base64url");
+}
+
+function hashPassword(password, salt = randomBytes(16).toString("base64url")) {
+  const hash = pbkdf2Sync(String(password), salt, 120000, 32, "sha256").toString("base64url");
+  return { salt, passwordHash: hash };
+}
+
+function verifyPassword(password, salt, expectedHash) {
+  if (!salt || !expectedHash) return false;
+  const actual = hashPassword(password, salt).passwordHash;
+  const actualBuffer = Buffer.from(actual);
+  const expectedBuffer = Buffer.from(expectedHash);
+  return actualBuffer.length === expectedBuffer.length && timingSafeEqual(actualBuffer, expectedBuffer);
+}
+
+function parseCookies(req) {
+  const header = req.headers.cookie || "";
+  return Object.fromEntries(
+    header.split(";")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const index = part.indexOf("=");
+        return [part.slice(0, index), decodeURIComponent(part.slice(index + 1))];
+      })
+  );
+}
+
+function createSessionCookie(user) {
+  const expiresAt = Date.now() + sessionHours * 60 * 60 * 1000;
+  const payload = base64url(JSON.stringify({
+    email: user.email,
+    role: user.role,
+    exp: expiresAt
+  }));
+  const signature = sign(payload);
+  const maxAge = sessionHours * 60 * 60;
+  return `${cookieName}=${payload}.${signature}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`;
+}
+
+function clearSessionCookie() {
+  return `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
+}
+
+function readSession(req) {
+  const token = parseCookies(req)[cookieName];
+  if (!token || !token.includes(".")) return null;
+  const [payload, signature] = token.split(".");
+  if (sign(payload) !== signature) return null;
 
   try {
-    return JSON.parse(Buffer.from(encoded, "base64").toString("utf8"));
+    const session = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!session.email || session.exp < Date.now()) return null;
+    return session;
   } catch {
     return null;
   }
 }
 
-function getPrincipalEmail(principal) {
-  const claim = principal?.claims?.find((item) => (
-    item.typ === "emails" ||
-    item.typ === "preferred_username" ||
-    item.typ === "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-  ));
-
-  return normalizeEmail(claim?.val || principal?.userDetails || "");
-}
-
-async function ensureOwner(client) {
-  const ownerEmail = normalizeEmail(process.env.STAFFVOICE_OWNER_EMAIL || "");
-  if (!ownerEmail) return null;
-
-  try {
-    const owner = await client.getEntity("users", ownerEmail);
-    if (owner.role !== "owner" || !owner.active) {
-      owner.role = "owner";
-      owner.active = true;
-      owner.updatedAt = new Date().toISOString();
-      await client.updateEntity(owner, "Merge");
-    }
-    return owner;
-  } catch (error) {
-    if (error.statusCode !== 404) throw error;
-  }
-
-  const now = new Date().toISOString();
-  const owner = {
-    partitionKey: "users",
-    rowKey: ownerEmail,
-    email: ownerEmail,
-    name: "System owner",
-    role: "owner",
-    active: true,
-    createdAt: now,
-    updatedAt: now
-  };
-  await client.createEntity(owner);
-  return owner;
-}
-
 async function getUserAccess(req) {
-  const principal = getClientPrincipal(req);
-  const email = getPrincipalEmail(principal);
-  const client = getTableClient(userTableName);
-  await ensureTable(client);
-  await ensureOwner(client);
-
   if (process.env.STAFFVOICE_ALLOW_LOCAL_ADMIN === "true") {
     return {
       allowed: true,
-      user: { email: "local@example.test", name: "Local admin", role: "owner", active: true },
-      principal
+      user: { email: "local@example.test", name: "Local admin", role: "owner", active: true }
     };
   }
 
-  if (!email) {
-    return { allowed: false, user: null, principal };
+  const session = readSession(req);
+  if (!session) {
+    return { allowed: false, status: 401, user: null };
   }
 
+  const client = getTableClient(userTableName);
+  await ensureTable(client);
+
   try {
-    const user = await client.getEntity("users", email);
+    const user = await client.getEntity("users", normalizeEmail(session.email));
     return {
       allowed: Boolean(user.active && ["owner", "hr"].includes(user.role)),
-      user,
-      principal
+      status: user.active ? 200 : 403,
+      user
     };
   } catch (error) {
     if (error.statusCode === 404) {
-      return { allowed: false, user: null, principal, email };
+      return { allowed: false, status: 403, user: null };
     }
     throw error;
   }
+}
+
+async function hasOwner(client) {
+  for await (const entity of client.listEntities({ queryOptions: { filter: "PartitionKey eq 'users' and role eq 'owner'" } })) {
+    if (entity.active) return true;
+  }
+  return false;
 }
 
 function requireOwner(access) {
@@ -97,8 +122,12 @@ function requireOwner(access) {
 }
 
 module.exports = {
-  getClientPrincipal,
-  getPrincipalEmail,
+  clearSessionCookie,
+  createSessionCookie,
   getUserAccess,
-  requireOwner
+  hasOwner,
+  hashPassword,
+  requireOwner,
+  toPublicUser,
+  verifyPassword
 };

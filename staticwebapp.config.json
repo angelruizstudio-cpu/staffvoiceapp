@@ -2,44 +2,15 @@
   "routes": [
     {
       "route": "/admin",
-      "rewrite": "/admin.html",
-      "allowedRoles": ["authenticated"]
+      "rewrite": "/admin.html"
     },
     {
-      "route": "/admin.html",
-      "allowedRoles": ["authenticated"]
-    },
-    {
-      "route": "/api/reports",
-      "methods": ["GET"],
-      "allowedRoles": ["authenticated"]
-    },
-    {
-      "route": "/api/reports/*",
-      "methods": ["PATCH"],
-      "allowedRoles": ["authenticated"]
-    },
-    {
-      "route": "/api/users",
-      "allowedRoles": ["authenticated"]
-    },
-    {
-      "route": "/api/users/*",
-      "allowedRoles": ["authenticated"]
+      "route": "/login",
+      "rewrite": "/login.html"
     }
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
     "exclude": ["/api/*", "/icons/*", "/*.{css,js,json,svg,png,jpg,jpeg,webp}"]
-  },
-  "responseOverrides": {
-    "401": {
-      "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer",
-      "statusCode": 302
-    },
-    "403": {
-      "rewrite": "/unauthorized.html",
-      "statusCode": 403
-    }
   }
 }
