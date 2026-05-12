@@ -1,4 +1,4 @@
-const CACHE_NAME = "staff-voice-v5";
+const CACHE_NAME = "staff-voice-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -10,7 +10,9 @@ const ASSETS = [
   "./admin.js",
   "./login.js",
   "./manifest.json",
-  "./icons/icon.svg"
+  "./icons/icon.svg",
+  "./assets/wts-seal.png",
+  "./assets/hero.avif"
 ];
 
 self.addEventListener("install", (event) => {
