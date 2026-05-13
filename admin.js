@@ -96,6 +96,9 @@ function renderReports() {
       </div>
       <p><strong>Reporting:</strong> ${report.reportingFor === "other" ? `For someone else (${report.permission || "permission not stated"})` : "For self"}</p>
       ${report.contact ? `<p><strong>Contact:</strong> ${report.contact}</p>` : ""}
+      ${report.contactMethod ? `<p><strong>Preferred method:</strong> ${report.contactMethod}</p>` : ""}
+      ${report.contactBestTime ? `<p><strong>Best time:</strong> ${report.contactBestTime}</p>` : ""}
+      ${report.followUpNotes ? `<p><strong>Follow-up notes:</strong> ${report.followUpNotes}</p>` : ""}
       <label>
         HR notes
         <textarea rows="3" data-notes="${report.id}" placeholder="Internal HR notes">${report.hrNotes || ""}</textarea>

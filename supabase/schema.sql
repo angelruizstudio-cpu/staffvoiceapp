@@ -15,6 +15,9 @@ create table if not exists public.staffvoice_reports (
   share_council text not null check (share_council in ('Yes', 'No')),
   hr_follow_up text not null default 'No' check (hr_follow_up in ('Yes', 'No')),
   contact text,
+  contact_method text,
+  contact_best_time text,
+  follow_up_notes text,
   hr_notes text not null default ''
 );
 

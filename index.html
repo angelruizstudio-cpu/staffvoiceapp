@@ -129,8 +129,11 @@
 
           <label id="contactFields">
             If yes, please provide a way to contact you:
-            <input name="contact" type="text" placeholder="Optional">
+            <input name="contact" id="contactInput" type="text" placeholder="Optional">
           </label>
+          <input name="contactMethod" id="contactMethodInput" type="hidden">
+          <input name="contactBestTime" id="contactBestTimeInput" type="hidden">
+          <input name="followUpNotes" id="followUpNotesInput" type="hidden">
 
           <div class="review-box" id="reviewBox">
             <strong>Before you submit:</strong>
@@ -185,6 +188,46 @@
       </section>
 
     </main>
+
+    <div class="modal-backdrop hidden" id="followUpModal" role="dialog" aria-modal="true" aria-labelledby="followUpTitle">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Follow-up contact</p>
+            <h2 id="followUpTitle">How should HR follow up?</h2>
+          </div>
+          <button class="icon-button" id="closeFollowUpModal" type="button" aria-label="Close">×</button>
+        </div>
+        <p class="note">By providing contact information, your report is no longer anonymous to HR. It will still be handled confidentially.</p>
+        <label>
+          Preferred contact method
+          <select id="followUpMethod">
+            <option value="">Select one</option>
+            <option>Email</option>
+            <option>Phone</option>
+            <option>Text message</option>
+            <option>In-person conversation</option>
+            <option>Other</option>
+          </select>
+        </label>
+        <label>
+          Email, phone, or preferred contact detail
+          <input id="followUpContact" type="text" placeholder="Optional but recommended">
+        </label>
+        <label>
+          Best time to contact you
+          <input id="followUpBestTime" type="text" placeholder="Optional">
+        </label>
+        <label>
+          Additional follow-up notes
+          <textarea id="followUpNotes" rows="3" placeholder="Optional"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button class="secondary-button" id="skipFollowUpContact" type="button">Continue without contact info</button>
+          <button class="submit-button modal-save" id="saveFollowUpContact" type="button">Save follow-up contact</button>
+        </div>
+      </div>
+    </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="/app.js"></script>

@@ -40,6 +40,9 @@ function toReportRow(entity) {
     share_council: entity.shareCouncil,
     hr_follow_up: entity.hrFollowUp,
     contact: entity.contact,
+    contact_method: entity.contactMethod,
+    contact_best_time: entity.contactBestTime,
+    follow_up_notes: entity.followUpNotes,
     hr_notes: entity.hrNotes || ""
   };
 }
@@ -62,6 +65,9 @@ function fromReportRow(row) {
     shareCouncil: row.share_council,
     hrFollowUp: row.hr_follow_up,
     contact: row.contact,
+    contactMethod: row.contact_method,
+    contactBestTime: row.contact_best_time,
+    followUpNotes: row.follow_up_notes,
     hrNotes: row.hr_notes || ""
   };
 }
@@ -184,6 +190,9 @@ function sanitizeReport(input) {
     shareCouncil,
     hrFollowUp,
     contact: String(input.contact || "").slice(0, 240),
+    contactMethod: String(input.contactMethod || "").slice(0, 80),
+    contactBestTime: String(input.contactBestTime || "").slice(0, 160),
+    followUpNotes: String(input.followUpNotes || "").slice(0, 1000),
     hrNotes: ""
   };
 }
@@ -232,6 +241,9 @@ function toPublicReport(entity) {
     shareCouncil: entity.shareCouncil,
     hrFollowUp: entity.hrFollowUp,
     contact: entity.contact,
+    contactMethod: entity.contactMethod,
+    contactBestTime: entity.contactBestTime,
+    followUpNotes: entity.followUpNotes,
     hrNotes: entity.hrNotes || ""
   };
 }
