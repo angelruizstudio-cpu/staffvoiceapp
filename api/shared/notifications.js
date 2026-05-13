@@ -1,5 +1,6 @@
 const https = require("https");
 const { buildTextPdf } = require("./pdf");
+const { getPublicOrigin } = require("./urls");
 
 function parseEmails(value) {
   return String(value || "")
@@ -122,9 +123,7 @@ async function sendReportNotification(report, req) {
     return { skipped: true };
   }
 
-  const forwardedProto = req?.headers?.["x-forwarded-proto"] || "https";
-  const host = req?.headers?.host || "staffvoice.kingdomtechgroup.org";
-  const adminUrl = process.env.STAFFVOICE_ADMIN_URL || `${forwardedProto}://${host}/admin`;
+  const adminUrl = process.env.STAFFVOICE_ADMIN_URL || `${getPublicOrigin(req)}/admin`;
   const pdf = buildReportPdf(report);
 
   return postJson("https://api.resend.com/emails", {

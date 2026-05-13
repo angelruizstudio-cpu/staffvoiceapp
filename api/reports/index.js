@@ -6,6 +6,7 @@ const {
 } = require("../shared/storage");
 const { getUserAccess } = require("../shared/auth");
 const { sendReportNotification } = require("../shared/notifications");
+const { getPublicOrigin } = require("../shared/urls");
 
 const validStatuses = new Set(["new", "reviewing", "closed"]);
 const validPublicStatuses = new Set(["received", "in_review", "follow_up", "closed"]);
@@ -41,7 +42,7 @@ module.exports = async function (context, req) {
         context.log.error("Report notification email failed", error);
       });
       const trackingUrl = report.trackingToken
-        ? `${req.headers["x-forwarded-proto"] || "https"}://${req.headers.host || "staffvoice.kingdomtechgroup.org"}/status.html?t=${encodeURIComponent(report.trackingToken)}`
+        ? `${getPublicOrigin(req)}/status.html?t=${encodeURIComponent(report.trackingToken)}`
         : "";
       context.res = json(201, {
         id: report.id,

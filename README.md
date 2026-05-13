@@ -23,6 +23,7 @@ Optional Resend settings for HR email notifications:
 RESEND_API_KEY=<Resend API key>
 STAFFVOICE_FROM_EMAIL=Staff Voice <no-reply@staffvoice.kingdomtechgroup.org>
 STAFFVOICE_NOTIFICATION_EMAILS=hr@example.org,owner@example.org
+STAFFVOICE_PUBLIC_URL=https://staffvoice.kingdomtechgroup.org
 STAFFVOICE_ADMIN_URL=https://staffvoice.kingdomtechgroup.org/admin
 ```
 
