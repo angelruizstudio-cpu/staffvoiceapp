@@ -1,14 +1,16 @@
-const CACHE_NAME = "staff-voice-v17";
+const CACHE_NAME = "staff-voice-v18";
 const ASSETS = [
   "./",
   "./index.html",
   "./admin.html",
+  "./case.html",
   "./login.html",
   "./status.html",
   "./unauthorized.html",
   "./styles.css",
   "./app.js",
   "./admin.js",
+  "./case.js",
   "./login.js",
   "./status.js",
   "./manifest.json",

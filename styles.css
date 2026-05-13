@@ -598,6 +598,14 @@ textarea:focus {
   padding: 18px;
 }
 
+.case-page .hr-section {
+  max-width: 1320px;
+}
+
+.case-detail-full {
+  overflow: visible;
+}
+
 .case-detail-head {
   display: flex;
   justify-content: space-between;

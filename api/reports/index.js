@@ -60,6 +60,22 @@ module.exports = async function (context, req) {
     }
 
     if (req.method === "GET") {
+      const id = context.bindingData.id;
+      if (id) {
+        const entity = await client.getEntity("reports", id).catch((error) => {
+          if (error.statusCode === 404) return null;
+          throw error;
+        });
+
+        if (!entity) {
+          context.res = json(404, { error: "Report not found." });
+          return;
+        }
+
+        context.res = json(200, { report: toPublicReport(entity) });
+        return;
+      }
+
       const reports = [];
       for await (const entity of client.listEntities({ queryOptions: { filter: "PartitionKey eq 'reports'" } })) {
         reports.push(toPublicReport(entity));

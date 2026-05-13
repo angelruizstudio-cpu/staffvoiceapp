@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#164b44">
+    <title>Case Detail | Staff Voice</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/admin" aria-label="Staff Voice admin">
+        <img src="/assets/wts-seal.png" alt="" onerror="this.src='/icons/icon.svg'">
+        <span>Staff Voice</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="/admin">Cases</a>
+        <a href="/admin#users">Users</a>
+        <button class="nav-button" id="logoutButton" type="button">Sign out</button>
+      </nav>
+    </header>
+
+    <main class="case-page">
+      <section class="hr-section">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Case workspace</p>
+            <h2 id="caseTitle">Loading case</h2>
+          </div>
+          <a class="secondary-button link-button" href="/admin">Back to cases</a>
+        </div>
+        <div id="caseDetail" aria-live="polite">
+          <div class="empty-state">Loading case...</div>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/case.js?v=18"></script>
+  </body>
+</html>
