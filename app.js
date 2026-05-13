@@ -8,6 +8,8 @@ const contactInput = document.querySelector("[name='contact']");
 const reportingFor = document.querySelector("#reportingFor");
 const permissionField = document.querySelector("#permissionField");
 const permissionSelect = document.querySelector("[name='permission']");
+const thanksSection = document.querySelector("#thanks");
+const newReportButton = document.querySelector("#newReportButton");
 const toast = document.querySelector("#toast");
 
 let privacyMode = "anonymous";
@@ -88,7 +90,8 @@ form.addEventListener("submit", async (event) => {
     setPrivacyMode("anonymous");
     permissionField.classList.add("hidden");
     permissionSelect.required = false;
-    document.querySelector("#thanks")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    thanksSection.classList.remove("hidden");
+    thanksSection.scrollIntoView({ behavior: "smooth", block: "center" });
     showToast("Report submitted. Thank you for sharing your voice.");
   } catch (error) {
     showToast(error.message);
@@ -96,6 +99,11 @@ form.addEventListener("submit", async (event) => {
     submitButton.disabled = false;
     submitButton.textContent = "Submit confidential report";
   }
+});
+
+newReportButton.addEventListener("click", () => {
+  thanksSection.classList.add("hidden");
+  document.querySelector("#report")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 if ("serviceWorker" in navigator) {
