@@ -76,7 +76,7 @@ async function loadStatus() {
       <h2>Messages from HR</h2>
       <div class="public-status-comments">${messageHistory}</div>
     </div>
-    <p class="small-print">This page only shows public follow-up information. HR internal notes are not visible here.</p>
+    <p class="small-print">Save this private link if you need to return later. This page only shows public follow-up information; HR internal notes are not visible here.</p>
   `;
 }
 

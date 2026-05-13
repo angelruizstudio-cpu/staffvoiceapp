@@ -108,14 +108,15 @@ form.addEventListener("submit", async (event) => {
       trackingLink.href = body.trackingUrl;
       trackingLink.textContent = body.trackingUrl;
       trackingBox.classList.remove("hidden");
+      showToast("Report submitted. Copy and save your private status link.");
     } else if (trackingLink && trackingBox) {
       trackingLink.removeAttribute("href");
       trackingLink.textContent = "";
       trackingBox.classList.add("hidden");
+      showToast("Report submitted. Thank you for sharing your voice.");
     }
     thanksSection.classList.remove("hidden");
     thanksSection.scrollIntoView({ behavior: "smooth", block: "center" });
-    showToast("Report submitted. Thank you for sharing your voice.");
   } catch (error) {
     showToast(error.message);
   } finally {
@@ -135,7 +136,7 @@ if (copyTrackingLink && trackingLink) {
     if (!trackingLink.href) return;
     try {
       await navigator.clipboard.writeText(trackingLink.href);
-      showToast("Status link copied.");
+      showToast("Status link copied. Please save it somewhere safe.");
     } catch {
       showToast("Copy the status link from the page.");
     }
