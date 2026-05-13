@@ -99,7 +99,7 @@ nav a:focus-visible,
   padding: clamp(42px, 7vw, 84px) clamp(18px, 5vw, 72px) 28px;
   background:
     linear-gradient(115deg, rgba(31, 49, 56, 0.92), rgba(95, 127, 141, 0.76)),
-    url("/assets/hero.avif"),
+    url("/assets/hero.jpg"),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-position: center;
   background-size: cover;
@@ -111,7 +111,7 @@ nav a:focus-visible,
   color: white;
   background:
     linear-gradient(110deg, rgba(31, 49, 56, 0.94), rgba(95, 127, 141, 0.76)),
-    url("/assets/hero.avif"),
+    url("/assets/hero.jpg"),
     url("https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1800&q=80");
   background-position: center;
   background-size: cover;
@@ -643,7 +643,7 @@ textarea:focus {
   padding: 24px;
   background:
     linear-gradient(130deg, rgba(31, 49, 56, 0.92), rgba(95, 127, 141, 0.7)),
-    url("/assets/hero.avif"),
+    url("/assets/hero.jpg"),
     url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1800&q=80");
   background-position: center;
   background-size: cover;
