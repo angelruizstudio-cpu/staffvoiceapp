@@ -53,21 +53,8 @@
         <aside class="privacy-panel">
           <h2>Privacy note</h2>
           <p>Reports are sent securely to HR. The HR panel is separate from this public form and requires authorized access.</p>
-          <div class="progress-card" aria-label="Form completion">
-            <div class="progress-top">
-              <strong>Progress</strong>
-              <span id="progressText">0%</span>
-            </div>
-            <div class="progress-track">
-              <span id="progressBar"></span>
-            </div>
-          </div>
           <div class="assurance" id="assurance">
             Your report remains anonymous unless you choose HR follow-up and provide contact information.
-          </div>
-          <div class="live-summary" aria-live="polite">
-            <strong>Current choices</strong>
-            <span id="summaryText">Start by selecting what you would like to share.</span>
           </div>
         </aside>
 
@@ -77,25 +64,34 @@
             <span class="step-pill" id="privacyPill">Anonymous</span>
           </div>
 
-          <fieldset class="option-group">
-            <legend>What would you like to share?</legend>
-            <label class="option-card"><input type="radio" name="reportType" value="Issue" required><span>Issue</span></label>
-            <label class="option-card"><input type="radio" name="reportType" value="Concern"><span>Concern</span></label>
-            <label class="option-card"><input type="radio" name="reportType" value="Other"><span>Other</span></label>
-          </fieldset>
+          <label>
+            What would you like to share?
+            <select name="reportType" required>
+              <option value="">Select one</option>
+              <option>Issue</option>
+              <option>Concern</option>
+              <option>Other</option>
+            </select>
+          </label>
 
-          <fieldset class="option-group">
-            <legend>Are you submitting this report for yourself or on behalf of another employee?</legend>
-            <label class="option-card"><input type="radio" name="reportingFor" value="self" required><span>On my behalf</span></label>
-            <label class="option-card"><input type="radio" name="reportingFor" value="other"><span>On behalf of someone else</span></label>
-          </fieldset>
+          <label>
+            Who is this about?
+            <select name="reportingFor" id="reportingFor" required>
+              <option value="">Select one</option>
+              <option value="self">On my behalf</option>
+              <option value="other">On behalf of someone else</option>
+            </select>
+          </label>
 
-          <fieldset class="option-group">
-            <legend>If you are reporting for someone else, do you have their permission to do so?</legend>
-            <label class="option-card"><input type="radio" name="permission" value="Yes, I have permission" required><span>Yes, I have permission</span></label>
-            <label class="option-card"><input type="radio" name="permission" value="No, I do not have permission"><span>No, I do not have permission</span></label>
-            <label class="option-card"><input type="radio" name="permission" value="Not applicable (I am reporting for myself)"><span>Not applicable (I am reporting for myself)</span></label>
-          </fieldset>
+          <label id="permissionField">
+            If you are reporting for someone else, do you have their permission to do so?
+            <select name="permission" required>
+              <option value="">Select one</option>
+              <option>Yes, I have permission</option>
+              <option>No, I do not have permission</option>
+              <option>Not applicable (I am reporting for myself)</option>
+            </select>
+          </label>
 
           <label>
             Please share your feedback or concern:
@@ -107,16 +103,28 @@
             <input name="area" type="text" placeholder="Optional">
           </label>
 
-          <fieldset class="option-group compact">
+          <fieldset>
             <legend>Would you like this shared with the Staff Council?</legend>
-            <label class="option-card"><input type="radio" name="shareCouncil" value="Yes" required><span>Yes</span></label>
-            <label class="option-card"><input type="radio" name="shareCouncil" value="No"><span>No</span></label>
+            <label class="radio-row">
+              <input type="radio" name="shareCouncil" value="Yes" required>
+              Yes
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="shareCouncil" value="No">
+              No
+            </label>
           </fieldset>
 
-          <fieldset class="option-group compact">
+          <fieldset>
             <legend>Would you like HR to follow up on this?</legend>
-            <label class="option-card"><input type="radio" name="hrFollowUp" value="Yes" required><span>Yes</span></label>
-            <label class="option-card"><input type="radio" name="hrFollowUp" value="No"><span>No</span></label>
+            <label class="radio-row">
+              <input type="radio" name="hrFollowUp" value="Yes" required>
+              Yes
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="hrFollowUp" value="No">
+              No
+            </label>
           </fieldset>
 
           <label id="contactFields">
