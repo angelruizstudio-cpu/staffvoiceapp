@@ -35,6 +35,7 @@ Follow-up tracking:
 - The public status page shows only the public status, last public update time, and HR's public message to the employee.
 - HR internal notes, contact details, and report details are not shown on the public status page.
 - Run `supabase/add_public_tracking.sql` on existing Supabase projects before deploying the tracking UI/API.
+- Run `supabase/add_case_comments.sql` to enable internal case comments and public messages to employees.
 
 Create the Supabase tables by running:
 

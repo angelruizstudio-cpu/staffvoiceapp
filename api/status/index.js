@@ -1,5 +1,7 @@
 const {
   getReportByTrackingToken,
+  listCaseComments,
+  toPublicComment,
   toPublicTrackingStatus
 } = require("../shared/storage");
 
@@ -31,7 +33,11 @@ module.exports = async function (context) {
       return;
     }
 
-    context.res = json(200, { report: toPublicTrackingStatus(report) });
+    const comments = await listCaseComments(report.id, { publicOnly: true });
+    context.res = json(200, {
+      report: toPublicTrackingStatus(report),
+      comments: comments.map(toPublicComment)
+    });
   } catch (error) {
     context.log.error(error);
     context.res = json(500, {

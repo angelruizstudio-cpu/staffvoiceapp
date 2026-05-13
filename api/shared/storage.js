@@ -3,6 +3,7 @@ const { createClient } = require("@supabase/supabase-js");
 
 const reportTableName = process.env.STAFFVOICE_TABLE_NAME || "staffvoice_reports";
 const userTableName = process.env.STAFFVOICE_USERS_TABLE_NAME || "staffvoice_users";
+const commentTableName = process.env.STAFFVOICE_COMMENTS_TABLE_NAME || "staffvoice_case_comments";
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL || process.env.STAFFVOICE_SUPABASE_URL;
@@ -215,6 +216,30 @@ function sanitizeReport(input) {
   };
 }
 
+function toCommentRow(entity) {
+  return {
+    id: entity.id,
+    report_id: entity.reportId,
+    created_at: entity.createdAt,
+    created_by_email: normalizeEmail(entity.createdByEmail),
+    created_by_name: entity.createdByName,
+    visibility: entity.visibility,
+    comment: entity.comment
+  };
+}
+
+function fromCommentRow(row) {
+  return {
+    id: row.id,
+    reportId: row.report_id,
+    createdAt: row.created_at,
+    createdByEmail: row.created_by_email,
+    createdByName: row.created_by_name,
+    visibility: row.visibility,
+    comment: row.comment
+  };
+}
+
 function sanitizeUser(input) {
   const email = normalizeEmail(input.email);
   const now = new Date().toISOString();
@@ -269,6 +294,19 @@ function toPublicReport(entity) {
   };
 }
 
+function sanitizeComment(input, user, reportId) {
+  const now = new Date().toISOString();
+  return {
+    id: randomUUID(),
+    reportId,
+    createdAt: now,
+    createdByEmail: normalizeEmail(user?.email),
+    createdByName: String(user?.name || user?.email || "HR").slice(0, 160),
+    visibility: input.visibility === "public" ? "public" : "internal",
+    comment: String(input.comment || "").trim().slice(0, 4000)
+  };
+}
+
 async function getReportByTrackingToken(token) {
   const tokenHash = hashTrackingToken(token);
   const { data, error } = await getSupabase()
@@ -279,6 +317,32 @@ async function getReportByTrackingToken(token) {
 
   if (error) throw mapDbError(error);
   return fromReportRow(data);
+}
+
+async function createCaseComment(comment) {
+  const row = toCommentRow(comment);
+  const { data, error } = await getSupabase()
+    .from(commentTableName)
+    .insert(row)
+    .select("*")
+    .single();
+
+  if (error) throw mapDbError(error);
+  return fromCommentRow(data);
+}
+
+async function listCaseComments(reportId, { publicOnly = false } = {}) {
+  let query = getSupabase()
+    .from(commentTableName)
+    .select("*")
+    .eq("report_id", reportId)
+    .order("created_at", { ascending: true });
+
+  if (publicOnly) query = query.eq("visibility", "public");
+
+  const { data, error } = await query;
+  if (error) throw mapDbError(error);
+  return (data || []).map(fromCommentRow);
 }
 
 function toPublicTrackingStatus(entity) {
@@ -292,14 +356,40 @@ function toPublicTrackingStatus(entity) {
   };
 }
 
+function toAdminComment(entity) {
+  return {
+    id: entity.id,
+    reportId: entity.reportId,
+    createdAt: entity.createdAt,
+    createdByName: entity.createdByName,
+    createdByEmail: entity.createdByEmail,
+    visibility: entity.visibility,
+    comment: entity.comment
+  };
+}
+
+function toPublicComment(entity) {
+  return {
+    createdAt: entity.createdAt,
+    createdByName: "HR",
+    comment: entity.comment
+  };
+}
+
 module.exports = {
+  commentTableName,
+  createCaseComment,
   ensureTable,
   getReportByTrackingToken,
   getTableClient,
   hashTrackingToken,
+  listCaseComments,
   normalizeEmail,
   reportTableName,
+  sanitizeComment,
   sanitizeReport,
+  toAdminComment,
+  toPublicComment,
   toPublicTrackingStatus,
   sanitizeUser,
   toPublicReport,
