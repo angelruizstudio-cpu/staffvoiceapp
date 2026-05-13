@@ -29,6 +29,10 @@ module.exports = async function (context, req) {
         context.res = json(400, { error: "Missing required report fields." });
         return;
       }
+      if (report.hrFollowUp === "Yes" && !report.contact) {
+        context.res = json(400, { error: "Contact information is required when HR follow-up is requested." });
+        return;
+      }
 
       await client.createEntity(report);
       context.res = json(201, {

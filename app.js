@@ -4,7 +4,7 @@ const thanksSection = document.querySelector("#thanks");
 const newReportButton = document.querySelector("#newReportButton");
 const followUpModal = document.querySelector("#followUpModal");
 const closeFollowUpModal = document.querySelector("#closeFollowUpModal");
-const skipFollowUpContact = document.querySelector("#skipFollowUpContact");
+const cancelFollowUpContact = document.querySelector("#cancelFollowUpContact");
 const saveFollowUpContact = document.querySelector("#saveFollowUpContact");
 const contactInput = document.querySelector("#contactInput");
 const contactMethodInput = document.querySelector("#contactMethodInput");
@@ -33,6 +33,12 @@ function openFollowUpModal() {
 
 function closeModal() {
   followUpModal.classList.add("hidden");
+}
+
+function setFollowUpChoice(value) {
+  const radio = form.querySelector(`[name="hrFollowUp"][value="${value}"]`);
+  if (radio) radio.checked = true;
+  privacyPill.textContent = value === "Yes" ? "Follow-up requested" : "Anonymous";
 }
 
 form.addEventListener("change", (event) => {
@@ -70,6 +76,12 @@ form.addEventListener("submit", async (event) => {
     followUpNotes: formData.get("followUpNotes") || "",
   };
 
+  if (hrFollowUp === "Yes" && !String(report.contact).trim()) {
+    openFollowUpModal();
+    showToast("Please provide contact information so HR can follow up.");
+    return;
+  }
+
   submitButton.disabled = true;
   submitButton.textContent = "Submitting...";
 
@@ -104,8 +116,20 @@ newReportButton.addEventListener("click", () => {
 });
 
 closeFollowUpModal.addEventListener("click", closeModal);
-skipFollowUpContact.addEventListener("click", closeModal);
+cancelFollowUpContact.addEventListener("click", () => {
+  setFollowUpChoice("No");
+  contactInput.value = "";
+  contactMethodInput.value = "";
+  contactBestTimeInput.value = "";
+  followUpNotesInput.value = "";
+  closeModal();
+});
 saveFollowUpContact.addEventListener("click", () => {
+  if (!followUpContact.value.trim()) {
+    showToast("Contact detail is required for HR follow-up.");
+    followUpContact.focus();
+    return;
+  }
   contactMethodInput.value = followUpMethod.value;
   contactInput.value = followUpContact.value;
   contactBestTimeInput.value = followUpBestTime.value;
