@@ -12,6 +12,10 @@
       "rewrite": "/admin.html"
     },
     {
+      "route": "/users",
+      "rewrite": "/users.html"
+    },
+    {
       "route": "/login",
       "rewrite": "/login.html"
     }

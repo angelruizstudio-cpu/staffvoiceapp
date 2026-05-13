@@ -17,7 +17,8 @@
       </a>
       <nav aria-label="Primary">
         <a href="/">Submit</a>
-        <a href="#users">Users</a>
+        <a href="/admin" aria-current="page">Cases</a>
+        <a href="/users">Users</a>
         <button class="nav-button" id="logoutButton" type="button">Sign out</button>
       </nav>
     </header>
@@ -47,43 +48,9 @@
         <div class="report-list" id="reportList" aria-live="polite"></div>
       </section>
 
-      <section class="hr-section" id="users">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Internal access</p>
-            <h2>Authorized users</h2>
-          </div>
-          <span class="step-pill" id="currentUserPill">Loading access</span>
-        </div>
-
-        <form class="user-form hidden" id="userForm">
-          <label>
-            Email
-            <input name="email" type="email" required placeholder="name@example.org">
-          </label>
-          <label>
-            Name
-            <input name="name" type="text" placeholder="Optional">
-          </label>
-          <label>
-            Role
-            <select name="role">
-              <option value="hr">HR reviewer</option>
-              <option value="owner">Owner</option>
-            </select>
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" minlength="10" placeholder="Set or reset">
-          </label>
-          <button class="secondary-button" type="submit">Add or update user</button>
-        </form>
-
-        <div class="report-list" id="userList" aria-live="polite"></div>
-      </section>
     </main>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="/admin.js?v=18"></script>
+    <script src="/admin.js?v=19"></script>
   </body>
 </html>

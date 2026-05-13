@@ -1,8 +1,9 @@
-const CACHE_NAME = "staff-voice-v18";
+const CACHE_NAME = "staff-voice-v19";
 const ASSETS = [
   "./",
   "./index.html",
   "./admin.html",
+  "./users.html",
   "./case.html",
   "./login.html",
   "./status.html",
@@ -10,6 +11,7 @@ const ASSETS = [
   "./styles.css",
   "./app.js",
   "./admin.js",
+  "./users.js",
   "./case.js",
   "./login.js",
   "./status.js",
