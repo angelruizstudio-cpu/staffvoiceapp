@@ -13,6 +13,7 @@ create table if not exists public.staffvoice_reports (
   area text,
   urgency text not null default 'Routine',
   share_council text not null check (share_council in ('Yes', 'No')),
+  hr_follow_up text not null default 'No' check (hr_follow_up in ('Yes', 'No')),
   contact text,
   hr_notes text not null default ''
 );

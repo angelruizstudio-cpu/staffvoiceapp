@@ -51,20 +51,10 @@
 
       <section class="workspace" aria-label="Staff report workspace">
         <aside class="privacy-panel">
-          <h2>Privacy choices</h2>
+          <h2>Privacy note</h2>
           <p>Reports are sent securely to HR. The HR panel is separate from this public form and requires authorized access.</p>
-          <div class="choice-grid" role="group" aria-label="Privacy mode">
-            <button class="choice active" type="button" data-privacy="anonymous">
-              <span class="choice-title">Stay anonymous</span>
-              <span>No contact details are requested.</span>
-            </button>
-            <button class="choice" type="button" data-privacy="followup">
-              <span class="choice-title">Allow follow-up</span>
-              <span>HR can contact you using details you provide.</span>
-            </button>
-          </div>
           <div class="assurance" id="assurance">
-            Your report remains anonymous because no contact information will be collected.
+            Your report remains anonymous unless you choose HR follow-up and provide contact information.
           </div>
         </aside>
 
@@ -80,8 +70,6 @@
               <option value="">Select one</option>
               <option>Issue</option>
               <option>Concern</option>
-              <option>Suggestion</option>
-              <option>Question</option>
               <option>Other</option>
             </select>
           </label>
@@ -90,43 +78,33 @@
             Who is this about?
             <select name="reportingFor" id="reportingFor" required>
               <option value="">Select one</option>
-              <option value="self">I am reporting for myself</option>
-              <option value="other">I am reporting on behalf of someone else</option>
+              <option value="self">On my behalf</option>
+              <option value="other">On behalf of someone else</option>
             </select>
           </label>
 
-          <label class="conditional hidden" id="permissionField">
-            Do you have their permission to share this?
-            <select name="permission">
+          <label id="permissionField">
+            If you are reporting for someone else, do you have their permission to do so?
+            <select name="permission" required>
               <option value="">Select one</option>
               <option>Yes, I have permission</option>
               <option>No, I do not have permission</option>
-              <option>I am unsure</option>
+              <option>Not applicable (I am reporting for myself)</option>
             </select>
           </label>
 
           <label>
-            Describe what happened or what you want HR to know.
+            Please share your feedback or concern:
             <textarea name="description" rows="7" required placeholder="Share only what you are comfortable sharing."></textarea>
           </label>
 
-          <div class="two-col">
-            <label>
-              Area or process
-              <input name="area" type="text" placeholder="Optional">
-            </label>
-            <label>
-              Urgency
-              <select name="urgency" required>
-                <option>Routine</option>
-                <option>Needs attention soon</option>
-                <option>Urgent</option>
-              </select>
-            </label>
-          </div>
+          <label>
+            Is this related to a specific area or process you can identify? If so, please provide details.
+            <input name="area" type="text" placeholder="Optional">
+          </label>
 
           <fieldset>
-            <legend>May HR share a de-identified summary with Staff Council?</legend>
+            <legend>Would you like this shared with the Staff Council?</legend>
             <label class="radio-row">
               <input type="radio" name="shareCouncil" value="Yes" required>
               Yes
@@ -137,17 +115,26 @@
             </label>
           </fieldset>
 
-          <div class="conditional hidden" id="contactFields">
-            <p class="note">By providing contact information, your report is no longer anonymous to HR. It should still be handled confidentially.</p>
-            <label>
-              How should HR contact you?
-              <input name="contact" type="text" placeholder="Email, phone, or preferred method">
+          <fieldset>
+            <legend>Would you like HR to follow up on this?</legend>
+            <label class="radio-row">
+              <input type="radio" name="hrFollowUp" value="Yes" required>
+              Yes
             </label>
-          </div>
+            <label class="radio-row">
+              <input type="radio" name="hrFollowUp" value="No">
+              No
+            </label>
+          </fieldset>
+
+          <label id="contactFields">
+            If yes, please provide a way to contact you:
+            <input name="contact" type="text" placeholder="Optional">
+          </label>
 
           <div class="review-box" id="reviewBox">
             <strong>Before you submit:</strong>
-            <span id="reviewText">No contact information will be requested. HR receives the report, and Staff Council only receives it if you authorize sharing.</span>
+            <span id="reviewText">HR receives the report. Staff Council only receives it if you authorize sharing. Providing contact information allows HR to follow up with you.</span>
           </div>
 
           <button class="submit-button" type="submit">Submit confidential report</button>

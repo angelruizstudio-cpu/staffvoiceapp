@@ -38,6 +38,7 @@ function toReportRow(entity) {
     area: entity.area,
     urgency: entity.urgency,
     share_council: entity.shareCouncil,
+    hr_follow_up: entity.hrFollowUp,
     contact: entity.contact,
     hr_notes: entity.hrNotes || ""
   };
@@ -59,6 +60,7 @@ function fromReportRow(row) {
     area: row.area,
     urgency: row.urgency,
     shareCouncil: row.share_council,
+    hrFollowUp: row.hr_follow_up,
     contact: row.contact,
     hrNotes: row.hr_notes || ""
   };
@@ -163,6 +165,7 @@ function sanitizeReport(input) {
   const id = randomUUID();
   const privacyMode = input.privacyMode === "followup" ? "followup" : "anonymous";
   const shareCouncil = input.shareCouncil === "Yes" ? "Yes" : "No";
+  const hrFollowUp = input.hrFollowUp === "Yes" ? "Yes" : "No";
 
   return {
     partitionKey: "reports",
@@ -179,7 +182,8 @@ function sanitizeReport(input) {
     area: String(input.area || "").slice(0, 180),
     urgency: String(input.urgency || "Routine").slice(0, 80),
     shareCouncil,
-    contact: privacyMode === "followup" ? String(input.contact || "").slice(0, 240) : "",
+    hrFollowUp,
+    contact: String(input.contact || "").slice(0, 240),
     hrNotes: ""
   };
 }
@@ -226,6 +230,7 @@ function toPublicReport(entity) {
     area: entity.area,
     urgency: entity.urgency,
     shareCouncil: entity.shareCouncil,
+    hrFollowUp: entity.hrFollowUp,
     contact: entity.contact,
     hrNotes: entity.hrNotes || ""
   };

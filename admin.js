@@ -89,6 +89,7 @@ function renderReports() {
       <div class="report-meta">
         <span class="${tagClass(report.urgency)}">${report.urgency}</span>
         <span class="tag">${report.privacyMode === "followup" ? "Follow-up allowed" : "Anonymous"}</span>
+        <span class="tag">HR follow-up: ${report.hrFollowUp || "No"}</span>
         <span class="tag">Staff Council: ${report.shareCouncil}</span>
         <span class="tag">${report.area || "No area listed"}</span>
         <span class="tag">${new Date(report.createdAt).toLocaleDateString()}</span>
