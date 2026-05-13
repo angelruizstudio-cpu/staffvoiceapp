@@ -88,6 +88,7 @@ form.addEventListener("submit", async (event) => {
     setPrivacyMode("anonymous");
     permissionField.classList.add("hidden");
     permissionSelect.required = false;
+    document.querySelector("#thanks")?.scrollIntoView({ behavior: "smooth", block: "center" });
     showToast("Report submitted. Thank you for sharing your voice.");
   } catch (error) {
     showToast(error.message);
