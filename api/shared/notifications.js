@@ -29,6 +29,30 @@ function formatDate(value) {
   }
 }
 
+function filenameDateParts(value) {
+  const date = new Date(value || Date.now());
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }).formatToParts(date).map((part) => [part.type, part.value]));
+
+  return {
+    date: `${parts.year}${parts.month}${parts.day}`,
+    hour: `${parts.hour}${parts.minute}`
+  };
+}
+
+function reportPdfFilename(report) {
+  const { date, hour } = filenameDateParts(report.createdAt);
+  const caseNumber = String(report.id || "case").slice(0, 8).toLowerCase();
+  return `svemp-form-${date}-${hour}-${caseNumber}.pdf`;
+}
+
 function postJson(url, body, headers = {}) {
   return new Promise((resolve, reject) => {
     const payload = JSON.stringify(body);
@@ -134,7 +158,7 @@ async function sendReportNotification(report, req) {
     text: buildEmailText(report, adminUrl),
     attachments: [
       {
-        filename: `staffvoice-report-${String(report.id).slice(0, 8)}.pdf`,
+        filename: reportPdfFilename(report),
         content: pdf.toString("base64")
       }
     ]

@@ -2,15 +2,16 @@ const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
 
-const pageWidth = 612;
-const pageHeight = 792;
-const margin = 50;
+const pageWidth = 595.28;
+const pageHeight = 841.89;
+const margin = 40;
 const colors = {
   ink: [0.12, 0.19, 0.22],
   muted: [0.39, 0.47, 0.5],
   line: [0.82, 0.88, 0.9],
-  soft: [0.93, 0.96, 0.97],
+  soft: [0.96, 0.96, 0.96],
   deep: [0.36, 0.5, 0.55],
+  navy: [0.07, 0.20, 0.35],
   gold: [0.72, 0.57, 0.29],
   white: [1, 1, 1]
 };
@@ -19,14 +20,12 @@ function rgb([r, g, b], operator = "rg") {
   return `${r} ${g} ${b} ${operator}`;
 }
 
-function pdfUnicodeString(value) {
-  const text = String(value || "");
-  const bytes = [0xfe, 0xff];
-  for (let index = 0; index < text.length; index += 1) {
-    const code = text.charCodeAt(index);
-    bytes.push((code >> 8) & 0xff, code & 0xff);
-  }
-  return `<${Buffer.from(bytes).toString("hex").toUpperCase()}>`;
+function pdfTextString(value) {
+  const text = String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\x09\x0A\x0D\x20-\x7E]/g, "");
+  return `(${text.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)")})`;
 }
 
 function wrapText(value, maxLength = 82) {
@@ -61,7 +60,7 @@ function textCommand({ x, y, text, font = "F1", size = 10, color = colors.ink })
     `/${font} ${size} Tf`,
     rgb(color),
     `${x} ${y} Td`,
-    `${pdfUnicodeString(text)} Tj`,
+    `${pdfTextString(text)} Tj`,
     "ET"
   ].join("\n");
 }
@@ -201,17 +200,17 @@ function makeStream(dictionary, stream) {
 }
 
 function addFooter(commands, pageNumber) {
-  commands.push(lineCommand({ x1: margin, y1: 42, x2: pageWidth - margin, y2: 42 }));
+  commands.push(lineCommand({ x1: margin, y1: 44, x2: pageWidth - margin, y2: 44, color: colors.line }));
   commands.push(textCommand({
     x: margin,
-    y: 26,
+    y: 28,
     text: "Confidential HR record. Store according to institutional retention policy.",
     size: 8,
     color: colors.muted
   }));
   commands.push(textCommand({
-    x: pageWidth - 92,
-    y: 26,
+    x: pageWidth - 84,
+    y: 28,
     text: `Page ${pageNumber}`,
     size: 8,
     color: colors.muted
@@ -219,17 +218,16 @@ function addFooter(commands, pageNumber) {
 }
 
 function addHeader(commands, title, includeLogo) {
-  commands.push(rectCommand({ x: 0, y: 682, width: pageWidth, height: 110, fill: colors.soft }));
-  commands.push(rectCommand({ x: 0, y: 678, width: pageWidth, height: 4, fill: colors.gold }));
   if (includeLogo) {
-    commands.push("q\n64 0 0 64 50 704 cm\n/Logo Do\nQ");
+    commands.push("q\n58 0 0 58 54 742 cm\n/Logo Do\nQ");
   } else {
-    commands.push(rectCommand({ x: 50, y: 704, width: 64, height: 64, fill: colors.white, stroke: colors.line }));
-    commands.push(textCommand({ x: 67, y: 733, text: "WTS", font: "F2", size: 14, color: colors.deep }));
+    commands.push(rectCommand({ x: 54, y: 742, width: 58, height: 58, fill: colors.white, stroke: colors.line }));
+    commands.push(textCommand({ x: 70, y: 768, text: "WTS", font: "F2", size: 13, color: colors.deep }));
   }
-  commands.push(textCommand({ x: 130, y: 747, text: title, font: "F2", size: 22, color: colors.ink }));
-  commands.push(textCommand({ x: 132, y: 727, text: "Western Theological Seminary", font: "F2", size: 10, color: colors.deep }));
-  commands.push(textCommand({ x: 132, y: 711, text: "Staff Voice confidential report archive copy", size: 10, color: colors.muted }));
+  commands.push(textCommand({ x: 145, y: 790, text: title, font: "F2", size: 23, color: colors.ink }));
+  commands.push(textCommand({ x: 146, y: 766, text: "Western Theological Seminary", font: "F2", size: 10, color: colors.deep }));
+  commands.push(textCommand({ x: 146, y: 747, text: "Staff Voice confidential form archive copy", size: 10, color: colors.muted }));
+  commands.push(lineCommand({ x1: margin, y1: 715, x2: pageWidth - margin, y2: 715, color: colors.line }));
 }
 
 function metadataValue(sections, label) {
@@ -237,19 +235,25 @@ function metadataValue(sections, label) {
 }
 
 function addMetadataBox(commands, sections) {
-  commands.push(rectCommand({ x: margin, y: 598, width: pageWidth - margin * 2, height: 58, fill: colors.white, stroke: colors.line }));
+  commands.push(rectCommand({ x: margin, y: 626, width: pageWidth - margin * 2, height: 56, fill: colors.white, stroke: colors.line }));
   const items = [
+    ["Case", String(metadataValue(sections, "Report ID")).slice(0, 8).toUpperCase()],
     ["Submitted", metadataValue(sections, "Submitted")],
-    ["Report type", metadataValue(sections, "What would you like to share")],
-    ["HR follow-up", metadataValue(sections, "HR follow-up requested")],
-    ["Staff Council", metadataValue(sections, "Share with Staff Council")]
+    ["Type", metadataValue(sections, "What would you like to share")],
+    ["Follow-up", metadataValue(sections, "HR follow-up requested")]
   ];
   const columnWidth = (pageWidth - margin * 2) / 4;
   items.forEach(([label, value], index) => {
     const x = margin + index * columnWidth + 14;
-    commands.push(textCommand({ x, y: 632, text: label.toUpperCase(), font: "F2", size: 7, color: colors.gold }));
-    commands.push(textCommand({ x, y: 614, text: String(value).slice(0, 30), font: "F2", size: 10, color: colors.ink }));
+    if (index > 0) {
+      commands.push(lineCommand({ x1: margin + index * columnWidth, y1: 626, x2: margin + index * columnWidth, y2: 682, color: colors.line }));
+    }
+    commands.push(textCommand({ x, y: 662, text: label.toUpperCase(), font: "F2", size: 7, color: colors.navy }));
+    commands.push(textCommand({ x, y: 644, text: String(value).slice(0, 30), font: "F2", size: 10, color: colors.ink }));
   });
+
+  commands.push(textCommand({ x: margin, y: 602, text: `Staff Council sharing: ${metadataValue(sections, "Share with Staff Council")}`, size: 9, color: colors.muted }));
+  commands.push(textCommand({ x: margin, y: 584, text: `Specific area/process: ${metadataValue(sections, "Specific area or process")}`, size: 9, color: colors.muted }));
 }
 
 function drawSection(commands, section, y) {
@@ -257,31 +261,39 @@ function drawSection(commands, section, y) {
     ? "Not provided"
     : section.value;
   const lines = wrapText(value, 86);
-  const height = Math.max(54, 30 + lines.length * 13);
+  const bodyHeight = Math.max(30, 16 + lines.length * 12);
+  const height = 24 + bodyHeight;
 
+  commands.push(rectCommand({
+    x: margin,
+    y: y - 24,
+    width: pageWidth - margin * 2,
+    height: 24,
+    fill: colors.navy
+  }));
   commands.push(rectCommand({
     x: margin,
     y: y - height,
     width: pageWidth - margin * 2,
-    height,
-    fill: colors.white,
+    height: bodyHeight,
+    fill: colors.soft,
     stroke: colors.line
   }));
   commands.push(textCommand({
-    x: margin + 14,
-    y: y - 18,
+    x: margin + 8,
+    y: y - 16,
     text: section.label,
     font: "F2",
-    size: 9,
-    color: colors.deep
+    size: 8,
+    color: colors.white
   }));
 
   lines.forEach((line, index) => {
     commands.push(textCommand({
       x: margin + 14,
-      y: y - 36 - index * 13,
+      y: y - 42 - index * 12,
       text: line,
-      size: 9,
+      size: 8.6,
       color: colors.ink
     }));
   });
@@ -293,20 +305,22 @@ function buildTextPdf(title, sections) {
   const logo = loadLogo();
   const pages = [];
   let commands = [];
-  let y = 578;
+  let y = 552;
 
   addHeader(commands, title, Boolean(logo));
   addMetadataBox(commands, sections);
 
-  const contentSections = sections.filter((section) => !["Submitted", "What would you like to share", "HR follow-up requested", "Share with Staff Council"].includes(section.label));
+  const contentSections = sections.filter((section) => !["Report ID", "Submitted", "What would you like to share", "HR follow-up requested", "Share with Staff Council", "Specific area or process"].includes(section.label));
   for (const section of contentSections) {
     const value = section.value === undefined || section.value === null || section.value === "" ? "Not provided" : section.value;
-    const estimatedHeight = Math.max(54, 30 + wrapText(value, 86).length * 13);
-    if (y - estimatedHeight < 68) {
+    const estimatedHeight = 24 + Math.max(30, 16 + wrapText(value, 86).length * 12);
+    if (y - estimatedHeight < 70) {
       addFooter(commands, pages.length + 1);
       pages.push(commands);
       commands = [];
-      y = 736;
+      commands.push(textCommand({ x: margin, y: 792, text: title, font: "F2", size: 14, color: colors.ink }));
+      commands.push(lineCommand({ x1: margin, y1: 774, x2: pageWidth - margin, y2: 774, color: colors.line }));
+      y = 744;
     }
     const used = drawSection(commands, section, y);
     y -= used + 12;
