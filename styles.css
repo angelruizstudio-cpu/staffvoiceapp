@@ -307,6 +307,50 @@ p {
   line-height: 1.45;
 }
 
+.progress-card,
+.live-summary {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+}
+
+.progress-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: var(--deep-2);
+}
+
+.progress-track {
+  height: 9px;
+  overflow: hidden;
+  background: var(--soft);
+  border-radius: 999px;
+}
+
+.progress-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--deep);
+  border-radius: inherit;
+  transition: width 180ms ease;
+}
+
+.live-summary {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.live-summary strong {
+  color: var(--ink);
+}
+
 .report-form {
   padding: clamp(20px, 4vw, 34px);
 }
@@ -394,6 +438,57 @@ textarea:focus {
 .radio-row input {
   width: 18px;
   min-height: 18px;
+}
+
+.option-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px;
+  background: var(--paper);
+}
+
+.option-group legend {
+  margin-bottom: 8px;
+}
+
+.option-group.compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.option-card {
+  position: relative;
+  display: grid;
+  min-height: 64px;
+  margin: 0;
+  padding: 14px 14px 14px 46px;
+  align-items: center;
+  color: var(--ink);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.option-card:hover {
+  transform: translateY(-1px);
+  border-color: var(--blue);
+  box-shadow: 0 12px 28px rgba(49, 75, 86, 0.1);
+}
+
+.option-card input {
+  position: absolute;
+  left: 16px;
+  width: 18px;
+  min-height: 18px;
+  accent-color: var(--deep);
+}
+
+.option-card:has(input:checked) {
+  border-color: var(--deep);
+  background: var(--soft);
+  box-shadow: inset 4px 0 0 var(--deep), 0 12px 28px rgba(49, 75, 86, 0.1);
 }
 
 .hidden {
@@ -769,6 +864,8 @@ textarea:focus {
   .workspace,
   .process-grid,
   .two-col,
+  .option-group,
+  .option-group.compact,
   .user-form,
   .user-card {
     grid-template-columns: 1fr;
