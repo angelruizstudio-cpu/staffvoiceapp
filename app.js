@@ -2,6 +2,9 @@ const form = document.querySelector("#voiceForm");
 const privacyPill = document.querySelector("#privacyPill");
 const thanksSection = document.querySelector("#thanks");
 const newReportButton = document.querySelector("#newReportButton");
+const trackingBox = document.querySelector("#trackingBox");
+const trackingLink = document.querySelector("#trackingLink");
+const copyTrackingLink = document.querySelector("#copyTrackingLink");
 const followUpModal = document.querySelector("#followUpModal");
 const closeFollowUpModal = document.querySelector("#closeFollowUpModal");
 const cancelFollowUpContact = document.querySelector("#cancelFollowUpContact");
@@ -17,6 +20,7 @@ const followUpNotes = document.querySelector("#followUpNotes");
 const toast = document.querySelector("#toast");
 
 function showToast(message) {
+  if (!toast) return;
   toast.textContent = message;
   toast.classList.add("show");
   window.setTimeout(() => toast.classList.remove("show"), 2600);
@@ -97,8 +101,18 @@ form.addEventListener("submit", async (event) => {
       throw new Error(body.error || "Unable to submit report.");
     }
 
+    const body = await response.json();
     form.reset();
     privacyPill.textContent = "Anonymous";
+    if (body.trackingUrl && trackingLink && trackingBox) {
+      trackingLink.href = body.trackingUrl;
+      trackingLink.textContent = body.trackingUrl;
+      trackingBox.classList.remove("hidden");
+    } else if (trackingLink && trackingBox) {
+      trackingLink.removeAttribute("href");
+      trackingLink.textContent = "";
+      trackingBox.classList.add("hidden");
+    }
     thanksSection.classList.remove("hidden");
     thanksSection.scrollIntoView({ behavior: "smooth", block: "center" });
     showToast("Report submitted. Thank you for sharing your voice.");
@@ -112,8 +126,21 @@ form.addEventListener("submit", async (event) => {
 
 newReportButton.addEventListener("click", () => {
   thanksSection.classList.add("hidden");
+  trackingBox?.classList.add("hidden");
   document.querySelector("#report")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
+
+if (copyTrackingLink && trackingLink) {
+  copyTrackingLink.addEventListener("click", async () => {
+    if (!trackingLink.href) return;
+    try {
+      await navigator.clipboard.writeText(trackingLink.href);
+      showToast("Status link copied.");
+    } catch {
+      showToast("Copy the status link from the page.");
+    }
+  });
+}
 
 closeFollowUpModal.addEventListener("click", closeModal);
 cancelFollowUpContact.addEventListener("click", () => {

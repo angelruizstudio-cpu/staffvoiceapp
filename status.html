@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#164b44">
+    <title>Report Status | Staff Voice</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Staff Voice home">
+        <img src="/assets/wts-seal.png" alt="" onerror="this.src='/icons/icon.svg'">
+        <span>Staff Voice</span>
+      </a>
+      <nav aria-label="Primary">
+        <a href="/">Submit</a>
+        <a href="/login.html">HR login</a>
+      </nav>
+    </header>
+
+    <main class="status-page">
+      <section class="status-panel" aria-live="polite">
+        <p class="eyebrow">Private follow-up status</p>
+        <h1>Report status</h1>
+        <div id="statusContent" class="status-content">
+          <p>Loading status...</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/status.js"></script>
+  </body>
+</html>

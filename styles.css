@@ -421,6 +421,28 @@ textarea:focus {
   line-height: 1.5;
 }
 
+.tracking-box,
+.employee-message,
+.public-update {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #c8d9df;
+  border-radius: 8px;
+  background: #edf5f7;
+  text-align: left;
+}
+
+.tracking-box.hidden {
+  display: none;
+}
+
+.tracking-box a {
+  overflow-wrap: anywhere;
+  color: var(--deep);
+  font-weight: 800;
+}
+
 .submit-button {
   width: 100%;
   min-height: 54px;
@@ -603,6 +625,65 @@ textarea:focus {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 800;
+}
+
+.public-update {
+  margin: 16px 0;
+}
+
+.status-page {
+  display: grid;
+  min-height: calc(100vh - 69px);
+  place-items: center;
+  padding: clamp(30px, 6vw, 70px) clamp(18px, 4vw, 40px);
+  background: var(--soft);
+}
+
+.status-panel {
+  width: min(720px, 100%);
+  padding: clamp(24px, 5vw, 42px);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.status-panel h1 {
+  margin: 0 0 22px;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1;
+}
+
+.status-content {
+  display: grid;
+  gap: 16px;
+}
+
+.status-large {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 38px;
+  align-items: center;
+  padding: 8px 12px;
+  color: white;
+  background: var(--deep);
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.status-date {
+  color: var(--muted);
+}
+
+.employee-message h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.employee-message p {
+  margin-bottom: 0;
+  color: var(--ink);
+  line-height: 1.55;
 }
 
 .toast {

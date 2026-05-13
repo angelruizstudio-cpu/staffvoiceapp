@@ -12,10 +12,29 @@ let users = [];
 let currentUser = null;
 let activeFilter = "all";
 
+const publicStatusLabels = {
+  received: "Received",
+  in_review: "In review",
+  follow_up: "Follow-up in progress",
+  closed: "Closed"
+};
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
   window.setTimeout(() => toast.classList.remove("show"), 2600);
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/'/g, "&#39;");
 }
 
 function renderUsers() {
@@ -36,18 +55,18 @@ function renderUsers() {
   userList.innerHTML = users.map((user) => `
     <article class="user-card">
       <div>
-        <h3>${user.name || user.email}</h3>
-        <p>${user.email}</p>
+        <h3>${escapeHtml(user.name || user.email)}</h3>
+        <p>${escapeHtml(user.email)}</p>
       </div>
       <div class="report-meta">
-        <span class="tag">${user.role}</span>
+        <span class="tag">${escapeHtml(user.role)}</span>
         <span class="tag ${user.active ? "" : "warn"}">${user.active ? "Active" : "Inactive"}</span>
       </div>
       ${isOwner ? `
         <div class="report-actions">
-          <button type="button" data-user-role="hr" data-email="${user.email}">Make HR</button>
-          <button type="button" data-user-role="owner" data-email="${user.email}">Make owner</button>
-          <button type="button" data-user-active="${user.active ? "false" : "true"}" data-email="${user.email}">
+          <button type="button" data-user-role="hr" data-email="${escapeAttr(user.email)}">Make HR</button>
+          <button type="button" data-user-role="owner" data-email="${escapeAttr(user.email)}">Make owner</button>
+          <button type="button" data-user-active="${user.active ? "false" : "true"}" data-email="${escapeAttr(user.email)}">
             ${user.active ? "Deactivate" : "Activate"}
           </button>
         </div>
@@ -70,7 +89,9 @@ function tagClass(value) {
 function renderReports() {
   const visibleReports = activeFilter === "all"
     ? reports
-    : reports.filter((report) => report.status === activeFilter);
+    : activeFilter === "followup"
+      ? reports.filter((report) => report.hrFollowUp === "Yes" && report.status !== "closed")
+      : reports.filter((report) => report.status === activeFilter);
 
   if (!visibleReports.length) {
     reportList.innerHTML = `<div class="empty-state">No ${activeFilter === "all" ? "" : activeFilter} reports yet.</div>`;
@@ -81,32 +102,50 @@ function renderReports() {
     <article class="report-card">
       <div class="report-top">
         <div>
-          <h3>${report.reportType}</h3>
-          <p>${reportSummary(report)}</p>
+          <h3>${escapeHtml(report.reportType)}</h3>
+          <p>${escapeHtml(reportSummary(report))}</p>
         </div>
-        <span class="status">${report.status}</span>
+        <span class="status">${escapeHtml(report.status)}</span>
       </div>
       <div class="report-meta">
-        <span class="${tagClass(report.urgency)}">${report.urgency}</span>
+        <span class="${tagClass(report.urgency)}">${escapeHtml(report.urgency)}</span>
         <span class="tag">${report.privacyMode === "followup" ? "Follow-up allowed" : "Anonymous"}</span>
         <span class="tag">HR follow-up: ${report.hrFollowUp || "No"}</span>
-        <span class="tag">Staff Council: ${report.shareCouncil}</span>
-        <span class="tag">${report.area || "No area listed"}</span>
+        <span class="tag">Staff Council: ${escapeHtml(report.shareCouncil)}</span>
+        <span class="tag">${escapeHtml(report.area || "No area listed")}</span>
+        ${report.hrFollowUp === "Yes" ? `<span class="tag warn">Public: ${escapeHtml(publicStatusLabels[report.publicStatus] || "Received")}</span>` : ""}
         <span class="tag">${new Date(report.createdAt).toLocaleDateString()}</span>
       </div>
-      <p><strong>Reporting:</strong> ${report.reportingFor === "other" ? `For someone else (${report.permission || "permission not stated"})` : "For self"}</p>
-      ${report.contact ? `<p><strong>Contact:</strong> ${report.contact}</p>` : ""}
-      ${report.contactMethod ? `<p><strong>Preferred method:</strong> ${report.contactMethod}</p>` : ""}
-      ${report.contactBestTime ? `<p><strong>Best time:</strong> ${report.contactBestTime}</p>` : ""}
-      ${report.followUpNotes ? `<p><strong>Follow-up notes:</strong> ${report.followUpNotes}</p>` : ""}
+      <p><strong>Reporting:</strong> ${report.reportingFor === "other" ? `For someone else (${escapeHtml(report.permission || "permission not stated")})` : "For self"}</p>
+      ${report.contact ? `<p><strong>Contact:</strong> ${escapeHtml(report.contact)}</p>` : ""}
+      ${report.contactMethod ? `<p><strong>Preferred method:</strong> ${escapeHtml(report.contactMethod)}</p>` : ""}
+      ${report.contactBestTime ? `<p><strong>Best time:</strong> ${escapeHtml(report.contactBestTime)}</p>` : ""}
+      ${report.followUpNotes ? `<p><strong>Follow-up notes:</strong> ${escapeHtml(report.followUpNotes)}</p>` : ""}
+      ${report.hrFollowUp === "Yes" ? `
+        <div class="public-update">
+          <label>
+            Public status for employee
+            <select data-public-status="${escapeAttr(report.id)}">
+              ${Object.entries(publicStatusLabels).map(([value, label]) => `
+                <option value="${value}" ${report.publicStatus === value ? "selected" : ""}>${label}</option>
+              `).join("")}
+            </select>
+          </label>
+          <label>
+            Message to employee
+            <textarea rows="3" data-public-message="${escapeAttr(report.id)}" placeholder="Visible only through the private tracking link">${escapeHtml(report.publicMessage || "")}</textarea>
+          </label>
+        </div>
+      ` : ""}
       <label>
         HR notes
-        <textarea rows="3" data-notes="${report.id}" placeholder="Internal HR notes">${report.hrNotes || ""}</textarea>
+        <textarea rows="3" data-notes="${escapeAttr(report.id)}" placeholder="Internal HR notes">${escapeHtml(report.hrNotes || "")}</textarea>
       </label>
       <div class="report-actions">
-        <button type="button" data-status="new" data-id="${report.id}">New</button>
-        <button type="button" data-status="reviewing" data-id="${report.id}">Reviewing</button>
-        <button type="button" data-status="closed" data-id="${report.id}">Closed</button>
+        <button type="button" data-status="${escapeAttr(report.status)}" data-id="${escapeAttr(report.id)}">Save updates</button>
+        <button type="button" data-status="new" data-id="${escapeAttr(report.id)}">New</button>
+        <button type="button" data-status="reviewing" data-id="${escapeAttr(report.id)}">Reviewing</button>
+        <button type="button" data-status="closed" data-id="${escapeAttr(report.id)}">Closed</button>
       </div>
     </article>
   `).join("");
@@ -146,11 +185,11 @@ async function loadUsers() {
   renderUsers();
 }
 
-async function updateReport(id, status, hrNotes) {
+async function updateReport(id, status, hrNotes, publicStatus, publicMessage) {
   const response = await fetch(`/api/reports/${id}`, {
     method: "PATCH",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ status, hrNotes })
+    body: JSON.stringify({ status, hrNotes, publicStatus, publicMessage })
   });
 
   if (!response.ok) {
@@ -168,8 +207,10 @@ reportList.addEventListener("click", async (event) => {
   if (!button) return;
 
   const notes = document.querySelector(`[data-notes="${button.dataset.id}"]`)?.value || "";
+  const publicStatus = document.querySelector(`[data-public-status="${button.dataset.id}"]`)?.value;
+  const publicMessage = document.querySelector(`[data-public-message="${button.dataset.id}"]`)?.value;
   try {
-    await updateReport(button.dataset.id, button.dataset.status, notes);
+    await updateReport(button.dataset.id, button.dataset.status, notes, publicStatus, publicMessage);
     showToast("Report updated.");
   } catch (error) {
     showToast(error.message);

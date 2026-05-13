@@ -5,8 +5,10 @@ const {
   toPublicReport
 } = require("../shared/storage");
 const { getUserAccess } = require("../shared/auth");
+const { sendReportNotification } = require("../shared/notifications");
 
 const validStatuses = new Set(["new", "reviewing", "closed"]);
+const validPublicStatuses = new Set(["received", "in_review", "follow_up", "closed"]);
 
 function json(status, body) {
   return {
@@ -35,9 +37,16 @@ module.exports = async function (context, req) {
       }
 
       await client.createEntity(report);
+      await sendReportNotification(report, req).catch((error) => {
+        context.log.error("Report notification email failed", error);
+      });
+      const trackingUrl = report.trackingToken
+        ? `${req.headers["x-forwarded-proto"] || "https"}://${req.headers.host || "staffvoice.kingdomtechgroup.org"}/status.html?t=${encodeURIComponent(report.trackingToken)}`
+        : "";
       context.res = json(201, {
         id: report.id,
         createdAt: report.createdAt,
+        trackingUrl,
         message: "Report received."
       });
       return;
@@ -76,6 +85,23 @@ module.exports = async function (context, req) {
       const entity = await client.getEntity("reports", id);
       entity.status = nextStatus;
       entity.hrNotes = String(req.body?.hrNotes || entity.hrNotes || "").slice(0, 4000);
+      let publicStatusChanged = false;
+      if (req.body?.publicStatus !== undefined) {
+        if (!validPublicStatuses.has(req.body.publicStatus)) {
+          context.res = json(400, { error: "Invalid public status." });
+          return;
+        }
+        publicStatusChanged = entity.publicStatus !== req.body.publicStatus;
+        entity.publicStatus = req.body.publicStatus;
+      }
+      if (req.body?.publicMessage !== undefined) {
+        const publicMessage = String(req.body.publicMessage || "").slice(0, 2000);
+        publicStatusChanged = publicStatusChanged || entity.publicMessage !== publicMessage;
+        entity.publicMessage = publicMessage;
+      }
+      if (publicStatusChanged) {
+        entity.publicStatusUpdatedAt = new Date().toISOString();
+      }
       entity.updatedAt = new Date().toISOString();
       await client.updateEntity(entity, "Merge");
       context.res = json(200, { report: toPublicReport(entity) });

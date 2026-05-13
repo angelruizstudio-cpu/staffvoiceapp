@@ -1,4 +1,4 @@
-const { randomUUID } = require("crypto");
+const { createHash, randomBytes, randomUUID } = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 
 const reportTableName = process.env.STAFFVOICE_TABLE_NAME || "staffvoice_reports";
@@ -24,6 +24,10 @@ function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
 
+function hashTrackingToken(token) {
+  return createHash("sha256").update(String(token || ""), "utf8").digest("hex");
+}
+
 function toReportRow(entity) {
   return {
     id: entity.id,
@@ -43,6 +47,10 @@ function toReportRow(entity) {
     contact_method: entity.contactMethod,
     contact_best_time: entity.contactBestTime,
     follow_up_notes: entity.followUpNotes,
+    tracking_token_hash: entity.trackingTokenHash,
+    public_status: entity.publicStatus,
+    public_message: entity.publicMessage,
+    public_status_updated_at: entity.publicStatusUpdatedAt,
     hr_notes: entity.hrNotes || ""
   };
 }
@@ -68,6 +76,10 @@ function fromReportRow(row) {
     contactMethod: row.contact_method,
     contactBestTime: row.contact_best_time,
     followUpNotes: row.follow_up_notes,
+    trackingTokenHash: row.tracking_token_hash,
+    publicStatus: row.public_status || "received",
+    publicMessage: row.public_message || "",
+    publicStatusUpdatedAt: row.public_status_updated_at,
     hrNotes: row.hr_notes || ""
   };
 }
@@ -172,6 +184,7 @@ function sanitizeReport(input) {
   const privacyMode = input.privacyMode === "followup" ? "followup" : "anonymous";
   const shareCouncil = input.shareCouncil === "Yes" ? "Yes" : "No";
   const hrFollowUp = input.hrFollowUp === "Yes" ? "Yes" : "No";
+  const trackingToken = hrFollowUp === "Yes" ? randomBytes(32).toString("base64url") : "";
 
   return {
     partitionKey: "reports",
@@ -193,6 +206,11 @@ function sanitizeReport(input) {
     contactMethod: String(input.contactMethod || "").slice(0, 80),
     contactBestTime: String(input.contactBestTime || "").slice(0, 160),
     followUpNotes: String(input.followUpNotes || "").slice(0, 1000),
+    trackingToken,
+    trackingTokenHash: trackingToken ? hashTrackingToken(trackingToken) : null,
+    publicStatus: "received",
+    publicMessage: "",
+    publicStatusUpdatedAt: now,
     hrNotes: ""
   };
 }
@@ -244,16 +262,45 @@ function toPublicReport(entity) {
     contactMethod: entity.contactMethod,
     contactBestTime: entity.contactBestTime,
     followUpNotes: entity.followUpNotes,
+    publicStatus: entity.publicStatus || "received",
+    publicMessage: entity.publicMessage || "",
+    publicStatusUpdatedAt: entity.publicStatusUpdatedAt,
     hrNotes: entity.hrNotes || ""
+  };
+}
+
+async function getReportByTrackingToken(token) {
+  const tokenHash = hashTrackingToken(token);
+  const { data, error } = await getSupabase()
+    .from(reportTableName)
+    .select("*")
+    .eq("tracking_token_hash", tokenHash)
+    .single();
+
+  if (error) throw mapDbError(error);
+  return fromReportRow(data);
+}
+
+function toPublicTrackingStatus(entity) {
+  return {
+    createdAt: entity.createdAt,
+    updatedAt: entity.updatedAt,
+    publicStatus: entity.publicStatus || "received",
+    publicMessage: entity.publicMessage || "",
+    publicStatusUpdatedAt: entity.publicStatusUpdatedAt || entity.updatedAt,
+    hrFollowUp: entity.hrFollowUp
   };
 }
 
 module.exports = {
   ensureTable,
+  getReportByTrackingToken,
   getTableClient,
+  hashTrackingToken,
   normalizeEmail,
   reportTableName,
   sanitizeReport,
+  toPublicTrackingStatus,
   sanitizeUser,
   toPublicReport,
   toPublicUser,

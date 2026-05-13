@@ -18,6 +18,11 @@ create table if not exists public.staffvoice_reports (
   contact_method text,
   contact_best_time text,
   follow_up_notes text,
+  tracking_token_hash text unique,
+  public_status text not null default 'received'
+    check (public_status in ('received', 'in_review', 'follow_up', 'closed')),
+  public_message text not null default '',
+  public_status_updated_at timestamptz not null default now(),
   hr_notes text not null default ''
 );
 
@@ -43,3 +48,9 @@ alter table public.staffvoice_users enable row level security;
 
 -- The Azure Function uses the Supabase service_role key, which bypasses RLS.
 -- No public anon policies are created on purpose.
+grant usage on schema public to service_role;
+
+grant all privileges on table public.staffvoice_reports to service_role;
+grant all privileges on table public.staffvoice_users to service_role;
+
+grant all privileges on all sequences in schema public to service_role;
