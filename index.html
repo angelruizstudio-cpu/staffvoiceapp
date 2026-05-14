@@ -75,6 +75,23 @@
           </label>
 
           <label>
+            Which best describes the safety or urgency level?
+            <select name="urgency" id="urgencyInput" required>
+              <option value="">Select one</option>
+              <option>Routine feedback</option>
+              <option>Workplace concern</option>
+              <option>Harassment or discrimination concern</option>
+              <option>Threat or safety concern</option>
+              <option>Crime or illegal activity</option>
+              <option>Immediate danger</option>
+            </select>
+          </label>
+
+          <div class="note hidden" id="safetyNotice" role="alert">
+            If this involves immediate danger, violence, a threat, or a crime in progress, contact 911 or the appropriate emergency/security contact immediately. Staff Voice is not monitored 24/7. Reports may be escalated when required for safety, legal, or institutional obligations.
+          </div>
+
+          <label>
             Who is this about?
             <select name="reportingFor" id="reportingFor" required>
               <option value="">Select one</option>
@@ -236,6 +253,6 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="/app.js?v=20"></script>
+    <script src="/app.js?v=22"></script>
   </body>
 </html>

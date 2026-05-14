@@ -28,7 +28,7 @@ module.exports = async function (context) {
       throw error;
     });
 
-    if (!report || report.hrFollowUp !== "Yes") {
+    if (!report) {
       context.res = json(404, { error: "Tracking status not found." });
       return;
     }

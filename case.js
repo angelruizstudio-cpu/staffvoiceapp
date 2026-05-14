@@ -48,6 +48,21 @@ function reportSummary(value) {
   return text.length > 180 ? `${text.slice(0, 180)}...` : text;
 }
 
+function priorityLabel(value) {
+  const urgency = String(value || "Routine feedback");
+  if (["Threat or safety concern", "Crime or illegal activity", "Immediate danger"].includes(urgency)) {
+    return "Safety review";
+  }
+  if (urgency === "Harassment or discrimination concern") {
+    return "Sensitive review";
+  }
+  return "Routine";
+}
+
+function hasPublicTracking(report) {
+  return report.hrFollowUp === "Yes" || priorityLabel(report.urgency) === "Safety review";
+}
+
 function renderComments() {
   if (!comments.length) {
     return `<div class="empty-state">No case comments yet.</div>`;
@@ -100,7 +115,7 @@ function renderCase() {
             `).join("")}
           </select>
         </label>
-        ${report.hrFollowUp === "Yes" ? `
+        ${hasPublicTracking(report) ? `
           <label>
             Public status
             <select data-case-public-status="${escapeAttr(report.id)}">
@@ -114,6 +129,8 @@ function renderCase() {
 
       <div class="case-summary-grid">
         <div><strong>Opened</strong><span>${escapeHtml(formatDate(report.createdAt))}</span></div>
+        <div><strong>Safety/urgency</strong><span>${escapeHtml(report.urgency || "Routine feedback")}</span></div>
+        <div><strong>Priority</strong><span>${escapeHtml(priorityLabel(report.urgency))}</span></div>
         <div><strong>HR follow-up</strong><span>${escapeHtml(report.hrFollowUp || "No")}</span></div>
         <div><strong>Staff Council</strong><span>${escapeHtml(report.shareCouncil)}</span></div>
         <div><strong>Area/process</strong><span>${escapeHtml(report.area || "Not provided")}</span></div>
@@ -151,7 +168,7 @@ function renderCase() {
             Visibility
             <select name="visibility">
               <option value="internal">Internal HR note</option>
-              ${report.hrFollowUp === "Yes" ? `<option value="public">Message to employee</option>` : ""}
+              ${hasPublicTracking(report) ? `<option value="public">Message to employee</option>` : ""}
             </select>
           </label>
           <label>

@@ -254,6 +254,7 @@ function addMetadataBox(commands, sections) {
 
   commands.push(textCommand({ x: margin, y: 602, text: `Staff Council sharing: ${metadataValue(sections, "Share with Staff Council")}`, size: 9, color: colors.muted }));
   commands.push(textCommand({ x: margin, y: 584, text: `Specific area/process: ${metadataValue(sections, "Specific area or process")}`, size: 9, color: colors.muted }));
+  commands.push(textCommand({ x: margin, y: 566, text: `Safety/urgency: ${metadataValue(sections, "Safety or urgency level")}`, size: 9, color: colors.muted }));
 }
 
 function drawSection(commands, section, y) {
@@ -310,7 +311,7 @@ function buildTextPdf(title, sections) {
   addHeader(commands, title, Boolean(logo));
   addMetadataBox(commands, sections);
 
-  const contentSections = sections.filter((section) => !["Report ID", "Submitted", "What would you like to share", "HR follow-up requested", "Share with Staff Council", "Specific area or process"].includes(section.label));
+  const contentSections = sections.filter((section) => !["Report ID", "Submitted", "What would you like to share", "HR follow-up requested", "Share with Staff Council", "Specific area or process", "Safety or urgency level"].includes(section.label));
   for (const section of contentSections) {
     const value = section.value === undefined || section.value === null || section.value === "" ? "Not provided" : section.value;
     const estimatedHeight = 24 + Math.max(30, 16 + wrapText(value, 86).length * 12);

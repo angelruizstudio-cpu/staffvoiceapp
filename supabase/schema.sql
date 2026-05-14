@@ -11,7 +11,7 @@ create table if not exists public.staffvoice_reports (
   permission text,
   description text not null,
   area text,
-  urgency text not null default 'Routine',
+  urgency text not null default 'Routine feedback',
   share_council text not null check (share_council in ('Yes', 'No')),
   hr_follow_up text not null default 'No' check (hr_follow_up in ('Yes', 'No')),
   contact text,

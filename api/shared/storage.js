@@ -185,7 +185,9 @@ function sanitizeReport(input) {
   const privacyMode = input.privacyMode === "followup" ? "followup" : "anonymous";
   const shareCouncil = input.shareCouncil === "Yes" ? "Yes" : "No";
   const hrFollowUp = input.hrFollowUp === "Yes" ? "Yes" : "No";
-  const trackingToken = hrFollowUp === "Yes" ? randomBytes(32).toString("base64url") : "";
+  const urgency = String(input.urgency || "Routine feedback").slice(0, 80);
+  const safetyTracking = ["Threat or safety concern", "Crime or illegal activity", "Immediate danger"].includes(urgency);
+  const trackingToken = hrFollowUp === "Yes" || safetyTracking ? randomBytes(32).toString("base64url") : "";
 
   return {
     partitionKey: "reports",
@@ -200,7 +202,7 @@ function sanitizeReport(input) {
     permission: String(input.permission || "").slice(0, 120),
     description: String(input.description || "").slice(0, 8000),
     area: String(input.area || "").slice(0, 180),
-    urgency: String(input.urgency || "Routine").slice(0, 80),
+    urgency,
     shareCouncil,
     hrFollowUp,
     contact: String(input.contact || "").slice(0, 240),

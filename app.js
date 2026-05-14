@@ -13,11 +13,17 @@ const contactInput = document.querySelector("#contactInput");
 const contactMethodInput = document.querySelector("#contactMethodInput");
 const contactBestTimeInput = document.querySelector("#contactBestTimeInput");
 const followUpNotesInput = document.querySelector("#followUpNotesInput");
+const safetyNotice = document.querySelector("#safetyNotice");
 const followUpMethod = document.querySelector("#followUpMethod");
 const followUpContact = document.querySelector("#followUpContact");
 const followUpBestTime = document.querySelector("#followUpBestTime");
 const followUpNotes = document.querySelector("#followUpNotes");
 const toast = document.querySelector("#toast");
+const safetyUrgencies = new Set([
+  "Threat or safety concern",
+  "Crime or illegal activity",
+  "Immediate danger"
+]);
 
 function showToast(message) {
   if (!toast) return;
@@ -57,6 +63,10 @@ form.addEventListener("change", (event) => {
       followUpNotesInput.value = "";
     }
   }
+
+  if (event.target.name === "urgency") {
+    safetyNotice?.classList.toggle("hidden", !safetyUrgencies.has(event.target.value));
+  }
 });
 
 form.addEventListener("submit", async (event) => {
@@ -68,11 +78,11 @@ form.addEventListener("submit", async (event) => {
     privacyMode: hrFollowUp === "Yes" ? "followup" : "anonymous",
     hrFollowUp,
     reportType: formData.get("reportType"),
+    urgency: formData.get("urgency"),
     reportingFor: formData.get("reportingFor"),
     permission: formData.get("permission"),
     description: formData.get("description"),
     area: formData.get("area"),
-    urgency: "Routine",
     shareCouncil: formData.get("shareCouncil"),
     contact: formData.get("contact") || "",
     contactMethod: formData.get("contactMethod") || "",
@@ -104,6 +114,7 @@ form.addEventListener("submit", async (event) => {
     const body = await response.json();
     form.reset();
     privacyPill.textContent = "Anonymous";
+    safetyNotice?.classList.add("hidden");
     if (body.trackingUrl && trackingLink && trackingBox) {
       trackingLink.href = body.trackingUrl;
       trackingLink.textContent = body.trackingUrl;
@@ -128,6 +139,7 @@ form.addEventListener("submit", async (event) => {
 newReportButton.addEventListener("click", () => {
   thanksSection.classList.add("hidden");
   trackingBox?.classList.add("hidden");
+  safetyNotice?.classList.add("hidden");
   document.querySelector("#report")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 

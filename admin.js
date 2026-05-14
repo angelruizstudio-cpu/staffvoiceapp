@@ -49,10 +49,25 @@ function reportSummary(report) {
   return text.length > 140 ? `${text.slice(0, 140)}...` : text;
 }
 
+function priorityLabel(report) {
+  const urgency = String(report.urgency || "Routine feedback");
+  if (["Threat or safety concern", "Crime or illegal activity", "Immediate danger"].includes(urgency)) {
+    return "Safety";
+  }
+  if (urgency === "Harassment or discrimination concern") {
+    return "Sensitive";
+  }
+  return report.hrFollowUp === "Yes" ? "Follow-up" : "Routine";
+}
+
+function hasPublicTracking(report) {
+  return report.hrFollowUp === "Yes" || priorityLabel(report) === "Safety";
+}
+
 function visibleReports() {
   if (activeFilter === "all") return reports;
   if (activeFilter === "followup") {
-    return reports.filter((report) => report.hrFollowUp === "Yes" && report.status !== "closed");
+    return reports.filter((report) => hasPublicTracking(report) && report.status !== "closed");
   }
   return reports.filter((report) => report.status === activeFilter);
 }
@@ -94,9 +109,9 @@ function renderReports() {
                 </a>
               </td>
               <td>${escapeHtml(report.status)}</td>
-              <td>${escapeHtml(report.hrFollowUp === "Yes" ? (publicStatusLabels[report.publicStatus] || "Received") : "No follow-up")}</td>
+              <td>${escapeHtml(hasPublicTracking(report) ? (publicStatusLabels[report.publicStatus] || "Received") : "No public tracking")}</td>
               <td>${escapeHtml(report.reportType)}</td>
-              <td>${escapeHtml(report.hrFollowUp === "Yes" ? "Follow-up" : "Routine")}</td>
+              <td>${escapeHtml(priorityLabel(report))}</td>
               <td>${escapeHtml(formatDate(report.createdAt))}</td>
             </tr>
           `).join("")}

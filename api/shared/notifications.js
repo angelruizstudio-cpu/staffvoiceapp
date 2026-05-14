@@ -88,6 +88,7 @@ function reportSections(report) {
     { label: "Report ID", value: report.id },
     { label: "Submitted", value: formatDate(report.createdAt) },
     { label: "What would you like to share", value: report.reportType },
+    { label: "Safety or urgency level", value: report.urgency },
     { label: "Submitting for", value: report.reportingFor === "other" ? "On behalf of another employee" : "Self" },
     { label: "Permission", value: report.permission },
     { label: "Feedback or concern", value: report.description },
@@ -113,6 +114,7 @@ function buildEmailHtml(report, adminUrl) {
       <p>A new Staff Voice report was submitted on ${escapeHtml(submitted)}.</p>
       <ul>
         <li><strong>Type:</strong> ${escapeHtml(report.reportType)}</li>
+        <li><strong>Safety/urgency:</strong> ${escapeHtml(report.urgency || "Routine feedback")}</li>
         <li><strong>HR follow-up:</strong> ${escapeHtml(report.hrFollowUp)}</li>
         <li><strong>Staff Council sharing:</strong> ${escapeHtml(report.shareCouncil)}</li>
         <li><strong>Area/process:</strong> ${escapeHtml(report.area || "Not provided")}</li>
@@ -129,6 +131,7 @@ function buildEmailText(report, adminUrl) {
     "",
     `Submitted: ${formatDate(report.createdAt)}`,
     `Type: ${report.reportType}`,
+    `Safety/urgency: ${report.urgency || "Routine feedback"}`,
     `HR follow-up: ${report.hrFollowUp}`,
     `Staff Council sharing: ${report.shareCouncil}`,
     `Area/process: ${report.area || "Not provided"}`,

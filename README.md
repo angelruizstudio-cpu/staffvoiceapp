@@ -32,10 +32,12 @@ When these Resend settings are present, every submitted report sends HR an email
 Follow-up tracking:
 
 - Reports requesting HR follow-up receive a one-time private status link after submission.
+- Anonymous reports marked as a threat, safety concern, crime, illegal activity, or immediate danger also receive a one-time private status link so the submitter can check public case status without identifying themselves.
 - The public status page shows only the public status, last public update time, and HR's public message to the employee.
 - HR internal notes, contact details, and report details are not shown on the public status page.
 - Run `supabase/add_public_tracking.sql` on existing Supabase projects before deploying the tracking UI/API.
 - Run `supabase/add_case_comments.sql` to enable internal case comments and public messages to employees.
+- Run `supabase/add_safety_urgency_tracking.sql` on existing Supabase projects to update the default urgency value used by safety tracking.
 
 Create the Supabase tables by running:
 
