@@ -303,7 +303,7 @@ caseDetail.addEventListener("submit", async (event) => {
 
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/auth/logout", { method: "POST" });
-  window.location.href = "/login.html";
+  window.location.href = "/";
 });
 
 loadReport().catch((error) => showToast(error.message));

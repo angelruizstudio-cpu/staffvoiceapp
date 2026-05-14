@@ -141,7 +141,7 @@ userList.addEventListener("click", async (event) => {
 
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/auth/logout", { method: "POST" });
-  window.location.href = "/login.html";
+  window.location.href = "/";
 });
 
 loadUsers().catch((error) => showToast(error.message));

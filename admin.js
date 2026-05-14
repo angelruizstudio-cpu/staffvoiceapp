@@ -152,7 +152,7 @@ refreshReports.addEventListener("click", () => {
 
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/auth/logout", { method: "POST" });
-  window.location.href = "/login.html";
+  window.location.href = "/";
 });
 
 loadReports().catch((error) => showToast(error.message));
