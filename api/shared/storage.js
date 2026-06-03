@@ -1,24 +1,37 @@
 const { createHash, randomBytes, randomUUID } = require("crypto");
-const { createClient } = require("@supabase/supabase-js");
+const sql = require("mssql");
 
 const reportTableName = process.env.STAFFVOICE_TABLE_NAME || "staffvoice_reports";
 const userTableName = process.env.STAFFVOICE_USERS_TABLE_NAME || "staffvoice_users";
 const commentTableName = process.env.STAFFVOICE_COMMENTS_TABLE_NAME || "staffvoice_case_comments";
 
-function getSupabase() {
-  const url = process.env.SUPABASE_URL || process.env.STAFFVOICE_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.STAFFVOICE_SUPABASE_SERVICE_ROLE_KEY;
+let poolPromise;
 
-  if (!url || !serviceRoleKey) {
-    throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY application setting.");
+function getConnectionString() {
+  const value = process.env.AZURE_SQL_CONNECTION_STRING
+    || process.env.STAFFVOICE_SQL_CONNECTION_STRING
+    || process.env.SQLCONNSTR_STAFFVOICE;
+
+  if (!value) {
+    throw new Error("Missing AZURE_SQL_CONNECTION_STRING application setting.");
   }
 
-  return createClient(url, serviceRoleKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false
-    }
-  });
+  return value;
+}
+
+function quotedTableName(tableName) {
+  const clean = String(tableName || "").trim();
+  if (!/^[A-Za-z0-9_]+$/.test(clean)) {
+    throw new Error(`Invalid table name: ${clean}`);
+  }
+  return `[dbo].[${clean}]`;
+}
+
+async function getPool() {
+  if (!poolPromise) {
+    poolPromise = new sql.ConnectionPool(getConnectionString()).connect();
+  }
+  return poolPromise;
 }
 
 function normalizeEmail(value) {
@@ -27,6 +40,31 @@ function normalizeEmail(value) {
 
 function hashTrackingToken(token) {
   return createHash("sha256").update(String(token || ""), "utf8").digest("hex");
+}
+
+function iso(value) {
+  if (!value) return value;
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+function dateValue(value) {
+  if (!value) return null;
+  return value instanceof Date ? value : new Date(value);
+}
+
+function mapDbError(error) {
+  if (!error) return null;
+  if (error.statusCode) return error;
+  const mapped = new Error(error.message || "Database error.");
+  mapped.code = error.code;
+  mapped.number = error.number;
+  return mapped;
+}
+
+function notFound(message = "Record not found.") {
+  const error = new Error(message);
+  error.statusCode = 404;
+  return error;
 }
 
 function toReportRow(entity) {
@@ -61,8 +99,8 @@ function fromReportRow(row) {
     partitionKey: "reports",
     rowKey: row.id,
     id: row.id,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: iso(row.created_at),
+    updatedAt: iso(row.updated_at),
     status: row.status,
     reportType: row.report_type,
     privacyMode: row.privacy_mode,
@@ -80,7 +118,7 @@ function fromReportRow(row) {
     trackingTokenHash: row.tracking_token_hash,
     publicStatus: row.public_status || "received",
     publicMessage: row.public_message || "",
-    publicStatusUpdatedAt: row.public_status_updated_at,
+    publicStatusUpdatedAt: iso(row.public_status_updated_at),
     hrNotes: row.hr_notes || ""
   };
 }
@@ -108,23 +146,126 @@ function fromUserRow(row) {
     active: Boolean(row.active),
     passwordSalt: row.password_salt,
     passwordHash: row.password_hash,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at
+    createdAt: iso(row.created_at),
+    updatedAt: iso(row.updated_at)
   };
 }
 
-function mapDbError(error) {
-  if (!error) return null;
-  const mapped = new Error(error.message || "Database error.");
-  mapped.code = error.code;
-  mapped.details = error.details;
-  mapped.hint = error.hint;
-  if (error.code === "PGRST116") mapped.statusCode = 404;
-  return mapped;
+function addReportInputs(request, row) {
+  request
+    .input("id", sql.UniqueIdentifier, row.id)
+    .input("created_at", sql.DateTimeOffset, dateValue(row.created_at))
+    .input("updated_at", sql.DateTimeOffset, dateValue(row.updated_at))
+    .input("status", sql.NVarChar(40), row.status)
+    .input("report_type", sql.NVarChar(80), row.report_type)
+    .input("privacy_mode", sql.NVarChar(20), row.privacy_mode)
+    .input("reporting_for", sql.NVarChar(20), row.reporting_for)
+    .input("permission", sql.NVarChar(120), row.permission)
+    .input("description", sql.NVarChar(sql.MAX), row.description)
+    .input("area", sql.NVarChar(180), row.area)
+    .input("urgency", sql.NVarChar(80), row.urgency)
+    .input("share_council", sql.NVarChar(3), row.share_council)
+    .input("hr_follow_up", sql.NVarChar(3), row.hr_follow_up)
+    .input("contact", sql.NVarChar(240), row.contact)
+    .input("contact_method", sql.NVarChar(80), row.contact_method)
+    .input("contact_best_time", sql.NVarChar(160), row.contact_best_time)
+    .input("follow_up_notes", sql.NVarChar(1000), row.follow_up_notes)
+    .input("tracking_token_hash", sql.NVarChar(64), row.tracking_token_hash)
+    .input("public_status", sql.NVarChar(40), row.public_status)
+    .input("public_message", sql.NVarChar(sql.MAX), row.public_message)
+    .input("public_status_updated_at", sql.DateTimeOffset, dateValue(row.public_status_updated_at))
+    .input("hr_notes", sql.NVarChar(sql.MAX), row.hr_notes);
+  return request;
+}
+
+function addUserInputs(request, row) {
+  request
+    .input("email", sql.NVarChar(320), row.email)
+    .input("name", sql.NVarChar(160), row.name)
+    .input("role", sql.NVarChar(20), row.role)
+    .input("active", sql.Bit, row.active)
+    .input("password_salt", sql.NVarChar(120), row.password_salt)
+    .input("password_hash", sql.NVarChar(120), row.password_hash)
+    .input("created_at", sql.DateTimeOffset, dateValue(row.created_at))
+    .input("updated_at", sql.DateTimeOffset, dateValue(row.updated_at));
+  return request;
+}
+
+async function insertReport(tableName, row) {
+  const pool = await getPool();
+  await addReportInputs(pool.request(), row).query(`
+    insert into ${quotedTableName(tableName)} (
+      id, created_at, updated_at, status, report_type, privacy_mode, reporting_for,
+      permission, description, area, urgency, share_council, hr_follow_up, contact,
+      contact_method, contact_best_time, follow_up_notes, tracking_token_hash,
+      public_status, public_message, public_status_updated_at, hr_notes
+    ) values (
+      @id, @created_at, @updated_at, @status, @report_type, @privacy_mode, @reporting_for,
+      @permission, @description, @area, @urgency, @share_council, @hr_follow_up, @contact,
+      @contact_method, @contact_best_time, @follow_up_notes, @tracking_token_hash,
+      @public_status, @public_message, @public_status_updated_at, @hr_notes
+    )
+  `);
+}
+
+async function updateReport(tableName, row) {
+  const pool = await getPool();
+  const result = await addReportInputs(pool.request(), row).query(`
+    update ${quotedTableName(tableName)}
+    set created_at = @created_at,
+        updated_at = @updated_at,
+        status = @status,
+        report_type = @report_type,
+        privacy_mode = @privacy_mode,
+        reporting_for = @reporting_for,
+        permission = @permission,
+        description = @description,
+        area = @area,
+        urgency = @urgency,
+        share_council = @share_council,
+        hr_follow_up = @hr_follow_up,
+        contact = @contact,
+        contact_method = @contact_method,
+        contact_best_time = @contact_best_time,
+        follow_up_notes = @follow_up_notes,
+        tracking_token_hash = @tracking_token_hash,
+        public_status = @public_status,
+        public_message = @public_message,
+        public_status_updated_at = @public_status_updated_at,
+        hr_notes = @hr_notes
+    where id = @id
+  `);
+  if (!result.rowsAffected[0]) throw notFound("Report not found.");
+}
+
+async function insertUser(tableName, row) {
+  const pool = await getPool();
+  await addUserInputs(pool.request(), row).query(`
+    insert into ${quotedTableName(tableName)} (
+      email, name, role, active, password_salt, password_hash, created_at, updated_at
+    ) values (
+      @email, @name, @role, @active, @password_salt, @password_hash, @created_at, @updated_at
+    )
+  `);
+}
+
+async function updateUser(tableName, row) {
+  const pool = await getPool();
+  const result = await addUserInputs(pool.request(), row).query(`
+    update ${quotedTableName(tableName)}
+    set name = @name,
+        role = @role,
+        active = @active,
+        password_salt = @password_salt,
+        password_hash = @password_hash,
+        created_at = @created_at,
+        updated_at = @updated_at
+    where email = @email
+  `);
+  if (!result.rowsAffected[0]) throw notFound("User not found.");
 }
 
 function getTableClient(tableName = reportTableName) {
-  const supabase = getSupabase();
   const isUsers = tableName === userTableName;
 
   return {
@@ -135,41 +276,55 @@ function getTableClient(tableName = reportTableName) {
     },
 
     async createEntity(entity) {
-      const row = isUsers ? toUserRow(entity) : toReportRow(entity);
-      const { error } = await supabase.from(tableName).insert(row);
-      if (error) throw mapDbError(error);
+      try {
+        if (isUsers) {
+          await insertUser(tableName, toUserRow(entity));
+        } else {
+          await insertReport(tableName, toReportRow(entity));
+        }
+      } catch (error) {
+        throw mapDbError(error);
+      }
     },
 
     async getEntity(partitionKey, rowKey) {
-      const query = supabase
-        .from(tableName)
-        .select("*")
-        .eq(isUsers ? "email" : "id", rowKey)
-        .single();
+      try {
+        const pool = await getPool();
+        const keyColumn = isUsers ? "email" : "id";
+        const keyType = isUsers ? sql.NVarChar(320) : sql.UniqueIdentifier;
+        const result = await pool.request()
+          .input("key", keyType, rowKey)
+          .query(`select * from ${quotedTableName(tableName)} where ${keyColumn} = @key`);
 
-      const { data, error } = await query;
-      if (error) throw mapDbError(error);
-      return isUsers ? fromUserRow(data) : fromReportRow(data);
+        if (!result.recordset.length) throw notFound(isUsers ? "User not found." : "Report not found.");
+        return isUsers ? fromUserRow(result.recordset[0]) : fromReportRow(result.recordset[0]);
+      } catch (error) {
+        throw mapDbError(error);
+      }
     },
 
     async updateEntity(entity) {
-      const row = isUsers ? toUserRow(entity) : toReportRow(entity);
-      const keyColumn = isUsers ? "email" : "id";
-      const keyValue = isUsers ? row.email : row.id;
-      Object.keys(row).forEach((key) => {
-        if (row[key] === undefined) delete row[key];
-      });
-      const { error } = await supabase.from(tableName).update(row).eq(keyColumn, keyValue);
-      if (error) throw mapDbError(error);
+      try {
+        if (isUsers) {
+          await updateUser(tableName, toUserRow(entity));
+        } else {
+          await updateReport(tableName, toReportRow(entity));
+        }
+      } catch (error) {
+        throw mapDbError(error);
+      }
     },
 
     async *listEntities() {
-      let query = supabase.from(tableName).select("*");
-      query = isUsers ? query.order("email", { ascending: true }) : query.order("created_at", { ascending: false });
-      const { data, error } = await query;
-      if (error) throw mapDbError(error);
-      for (const row of data || []) {
-        yield isUsers ? fromUserRow(row) : fromReportRow(row);
+      try {
+        const pool = await getPool();
+        const orderBy = isUsers ? "email asc" : "created_at desc";
+        const result = await pool.request().query(`select * from ${quotedTableName(tableName)} order by ${orderBy}`);
+        for (const row of result.recordset || []) {
+          yield isUsers ? fromUserRow(row) : fromReportRow(row);
+        }
+      } catch (error) {
+        throw mapDbError(error);
       }
     }
   };
@@ -234,7 +389,7 @@ function fromCommentRow(row) {
   return {
     id: row.id,
     reportId: row.report_id,
-    createdAt: row.created_at,
+    createdAt: iso(row.created_at),
     createdByEmail: row.created_by_email,
     createdByName: row.created_by_name,
     visibility: row.visibility,
@@ -310,41 +465,64 @@ function sanitizeComment(input, user, reportId) {
 }
 
 async function getReportByTrackingToken(token) {
-  const tokenHash = hashTrackingToken(token);
-  const { data, error } = await getSupabase()
-    .from(reportTableName)
-    .select("*")
-    .eq("tracking_token_hash", tokenHash)
-    .single();
+  try {
+    const tokenHash = hashTrackingToken(token);
+    const pool = await getPool();
+    const result = await pool.request()
+      .input("tracking_token_hash", sql.NVarChar(64), tokenHash)
+      .query(`select * from ${quotedTableName(reportTableName)} where tracking_token_hash = @tracking_token_hash`);
 
-  if (error) throw mapDbError(error);
-  return fromReportRow(data);
+    if (!result.recordset.length) throw notFound("Tracking status not found.");
+    return fromReportRow(result.recordset[0]);
+  } catch (error) {
+    throw mapDbError(error);
+  }
 }
 
 async function createCaseComment(comment) {
-  const row = toCommentRow(comment);
-  const { data, error } = await getSupabase()
-    .from(commentTableName)
-    .insert(row)
-    .select("*")
-    .single();
+  try {
+    const row = toCommentRow(comment);
+    const pool = await getPool();
+    const result = await pool.request()
+      .input("id", sql.UniqueIdentifier, row.id)
+      .input("report_id", sql.UniqueIdentifier, row.report_id)
+      .input("created_at", sql.DateTimeOffset, dateValue(row.created_at))
+      .input("created_by_email", sql.NVarChar(320), row.created_by_email)
+      .input("created_by_name", sql.NVarChar(160), row.created_by_name)
+      .input("visibility", sql.NVarChar(20), row.visibility)
+      .input("comment", sql.NVarChar(sql.MAX), row.comment)
+      .query(`
+        insert into ${quotedTableName(commentTableName)} (
+          id, report_id, created_at, created_by_email, created_by_name, visibility, comment
+        )
+        output inserted.*
+        values (
+          @id, @report_id, @created_at, @created_by_email, @created_by_name, @visibility, @comment
+        )
+      `);
 
-  if (error) throw mapDbError(error);
-  return fromCommentRow(data);
+    return fromCommentRow(result.recordset[0]);
+  } catch (error) {
+    throw mapDbError(error);
+  }
 }
 
 async function listCaseComments(reportId, { publicOnly = false } = {}) {
-  let query = getSupabase()
-    .from(commentTableName)
-    .select("*")
-    .eq("report_id", reportId)
-    .order("created_at", { ascending: true });
+  try {
+    const pool = await getPool();
+    const visibilityFilter = publicOnly ? "and visibility = @visibility" : "";
+    const request = pool.request().input("report_id", sql.UniqueIdentifier, reportId);
+    if (publicOnly) request.input("visibility", sql.NVarChar(20), "public");
+    const result = await request.query(`
+      select * from ${quotedTableName(commentTableName)}
+      where report_id = @report_id ${visibilityFilter}
+      order by created_at asc
+    `);
 
-  if (publicOnly) query = query.eq("visibility", "public");
-
-  const { data, error } = await query;
-  if (error) throw mapDbError(error);
-  return (data || []).map(fromCommentRow);
+    return (result.recordset || []).map(fromCommentRow);
+  } catch (error) {
+    throw mapDbError(error);
+  }
 }
 
 function toPublicTrackingStatus(entity) {
